@@ -13,6 +13,10 @@
 		22BFA8A11F14022000CCB6D5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22BFA89F1F14022000CCB6D5 /* Main.storyboard */; };
 		22BFA8A31F14022000CCB6D5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22BFA8A21F14022000CCB6D5 /* Assets.xcassets */; };
 		22BFA8A61F14022000CCB6D5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 22BFA8A41F14022000CCB6D5 /* LaunchScreen.storyboard */; };
+		22BFA8B21F14035200CCB6D5 /* WRWebsocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8B11F14035200CCB6D5 /* WRWebsocket.m */; };
+		22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8B61F1B46B300CCB6D5 /* NSURL+WebSocket.m */; };
+		22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */; };
+		22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +30,15 @@
 		22BFA8A21F14022000CCB6D5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		22BFA8A51F14022000CCB6D5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		22BFA8A71F14022000CCB6D5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		22BFA8B01F14035200CCB6D5 /* WRWebsocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRWebsocket.h; sourceTree = "<group>"; };
+		22BFA8B11F14035200CCB6D5 /* WRWebsocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRWebsocket.m; sourceTree = "<group>"; };
+		22BFA8B51F1B46B300CCB6D5 /* NSURL+WebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+WebSocket.h"; sourceTree = "<group>"; };
+		22BFA8B61F1B46B300CCB6D5 /* NSURL+WebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+WebSocket.m"; sourceTree = "<group>"; };
+		22BFA8BE1F1B5A6E00CCB6D5 /* WRWebsocketDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRWebsocketDelegate.h; sourceTree = "<group>"; };
+		22BFA8BF1F1B5BB400CCB6D5 /* WRHandshakeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRHandshakeHandler.h; sourceTree = "<group>"; };
+		22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRHandshakeHandler.m; sourceTree = "<group>"; };
+		22BFA8C51F250BE500CCB6D5 /* NSError+WRError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+WRError.h"; sourceTree = "<group>"; };
+		22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+WRError.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +71,9 @@
 		22BFA8951F14022000CCB6D5 /* WhiteRabbitSocket */ = {
 			isa = PBXGroup;
 			children = (
+				22BFA8B31F1B45F900CCB6D5 /* categories */,
+				22BFA8B41F1B45F900CCB6D5 /* utils */,
+				22BFA8AF1F14033B00CCB6D5 /* websocket */,
 				22BFA8991F14022000CCB6D5 /* AppDelegate.h */,
 				22BFA89A1F14022000CCB6D5 /* AppDelegate.m */,
 				22BFA89C1F14022000CCB6D5 /* ViewController.h */,
@@ -77,6 +93,36 @@
 				22BFA8971F14022000CCB6D5 /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		22BFA8AF1F14033B00CCB6D5 /* websocket */ = {
+			isa = PBXGroup;
+			children = (
+				22BFA8B01F14035200CCB6D5 /* WRWebsocket.h */,
+				22BFA8B11F14035200CCB6D5 /* WRWebsocket.m */,
+				22BFA8BE1F1B5A6E00CCB6D5 /* WRWebsocketDelegate.h */,
+			);
+			path = websocket;
+			sourceTree = "<group>";
+		};
+		22BFA8B31F1B45F900CCB6D5 /* categories */ = {
+			isa = PBXGroup;
+			children = (
+				22BFA8B51F1B46B300CCB6D5 /* NSURL+WebSocket.h */,
+				22BFA8B61F1B46B300CCB6D5 /* NSURL+WebSocket.m */,
+				22BFA8C51F250BE500CCB6D5 /* NSError+WRError.h */,
+				22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */,
+			);
+			path = categories;
+			sourceTree = "<group>";
+		};
+		22BFA8B41F1B45F900CCB6D5 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				22BFA8BF1F1B5BB400CCB6D5 /* WRHandshakeHandler.h */,
+				22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */,
+			);
+			path = utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -150,7 +196,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */,
+				22BFA8B21F14035200CCB6D5 /* WRWebsocket.m in Sources */,
 				22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */,
+				22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */,
+				22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */,
 				22BFA89B1F14022000CCB6D5 /* AppDelegate.m in Sources */,
 				22BFA8981F14022000CCB6D5 /* main.m in Sources */,
 			);
