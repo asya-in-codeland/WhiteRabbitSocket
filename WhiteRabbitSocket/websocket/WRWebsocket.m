@@ -48,6 +48,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (void)open
 {
+    //TODO: connection via proxy
+    
     [_streamTask startSecureConnection];
     [_streamTask resume];
     
@@ -60,7 +62,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
             //TODO: move to callback queue
             [wself.delegate websocket:wself didFailWithError:error];
         } else {
-            //TODO: ?
+            //TODO: state is ready, I guess
         }
     }];
     
@@ -109,5 +111,4 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 #pragma mark - Private Methods
 
-- (void)
 @end
