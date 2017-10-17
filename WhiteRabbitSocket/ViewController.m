@@ -7,16 +7,25 @@
 //
 
 #import "ViewController.h"
+#import "WRWebsocket.h"
 
 @interface ViewController ()
 
 @end
 
-@implementation ViewController
+@implementation ViewController {
+    WRWebsocket *_webSocket;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    NSURL *handshakeTestUrl = [NSURL URLWithString:@"ws://echo.websocket.org"];
+    NSURLRequest *handshakeRequest = [NSURLRequest requestWithURL:handshakeTestUrl];
+    
+    _webSocket = [[WRWebsocket alloc] initWithURLRequest:handshakeRequest];
+    [_webSocket open];
 }
 
 

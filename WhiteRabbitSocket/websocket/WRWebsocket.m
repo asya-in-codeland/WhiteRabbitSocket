@@ -11,6 +11,7 @@
 #import "NSURL+WebSocket.h"
 #import "WRHandshakeHandler.h"
 #import "NSError+WRError.h"
+#import "WRHandshakeRequestBuilder.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -38,7 +39,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         configuration.timeoutIntervalForRequest = request.timeoutInterval;
         configuration.requestCachePolicy = request.cachePolicy;
         //TODO: put delegate & queue to an other class
-        _session = [NSURLSession sessionWithConfiguration:configuration];
+        _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         //_streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
     }
     return self;
@@ -55,6 +56,18 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     
     CFHTTPMessageRef _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
     NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:@"" cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
+    
+    NSMutableData *data = [NSMutableData dataWithLength:16];
+    int result = SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
+    if (result != 0) {
+        [NSException raise:NSInternalInconsistencyException format:@"Failed to generate random bytes with OSStatus: %d", result];
+    }
+    NSString *securityKeyString = [data base64EncodedStringWithOptions:0];
+    
+    NSURLRequest *handshakeRequest = [WRHandshakeRequestBuilder handshakeRequestWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:13 error:nil];
+    // TODO: add headers from requestBuilder
+    _handshakeTask = [_session dataTaskWithRequest:handshakeRequest];
+                    
 
     //TODO: writeData is proceed synchroniously, should we do smth with it?
     __weak typeof(self) wself = self;
@@ -109,6 +122,17 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 {
     return NO;
 }
+
+#pragma mark - NSURLSessionTaksDelegate
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+didReceiveResponse:(NSURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+    NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
+    NSLog(@"Did receive response %@", httpResponse.allHeaderFields);
+}
+
 
 #pragma mark - Private Methods
 
