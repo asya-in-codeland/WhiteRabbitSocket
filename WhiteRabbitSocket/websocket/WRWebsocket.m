@@ -24,7 +24,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSURLRequest *_initialRequest;
     NSURLSession *_session;
     NSURLSessionStreamTask *_streamTask;
-    CFHTTPMessageRef _handshakeResponse;
+    NSURLSessionDataTask *_handshakeTask;
 }
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request
@@ -39,7 +39,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         configuration.requestCachePolicy = request.cachePolicy;
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration];
-        _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
+        //_streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
     }
     return self;
 }
@@ -53,9 +53,10 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     [_streamTask startSecureConnection];
     [_streamTask resume];
     
-    _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
+    CFHTTPMessageRef _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
     NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:@"" cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
-    
+
+    //TODO: writeData is proceed synchroniously, should we do smth with it?
     __weak typeof(self) wself = self;
     [_streamTask writeData:handshakeData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
         if (error != nil) {

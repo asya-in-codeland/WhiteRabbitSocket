@@ -9,6 +9,9 @@
 #import "WRHandshakeHandler.h"
 #import "NSURL+WebSocket.h"
 #import "NSError+WRError.h"
+#import "NSString+SHA1.h"
+
+static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 @implementation WRHandshakeHandler
 
@@ -78,14 +81,24 @@
         *error = [NSError errorWithCode:responseCode description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];
         return NO;
     }
-    
-    NSString *acceptHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Accept")));
 
-    NSString *concattedString = [securityKey stringByAppendingString:SRWebSocketAppendToSecKeyString];
-    NSData *hashedString = SRSHA1HashFromString(concattedString);
-    NSString *expectedAccept = SRBase64EncodedStringFromData(hashedString);
+    NSString *upgradeHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Upgrade")));
+    if (![upgradeHeader isEqualToString:@"websocket"]) {
+        *error = [NSError errorWithCode:responseCode description:@"Invalid Upgrade response"];
+        return NO;
+    }
+
+    NSString *connectionHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Connection")));
+    if (![connectionHeader isEqualToString:@"Upgrade"]) {
+        *error = [NSError errorWithCode:responseCode description:@"Invalid Connection response"];
+        return NO;
+    }
+
+    NSString *acceptHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Accept")));
+    NSString *concattedString = [securityKey stringByAppendingString:WRWebSocketAppendToSecKeyString];
+    NSString *expectedAccept =  [[concattedString SHA1] base64EncodedStringWithOptions:0];;
     if(acceptHeader == nil || ![acceptHeader isEqualToString:expectedAccept]) {
-        *error = [NSError errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."]
+        *error = [NSError errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."];
         return NO;
     }
     
@@ -96,6 +109,7 @@
             return NO;
         }
     }
+
     return YES;
 }
 

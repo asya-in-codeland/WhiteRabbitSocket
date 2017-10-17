@@ -17,6 +17,7 @@
 		22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8B61F1B46B300CCB6D5 /* NSURL+WebSocket.m */; };
 		22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */; };
 		22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */; };
+		26EBBB0E1F965CA00091A64E /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 26EBBB0D1F965CA00091A64E /* NSString+SHA1.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,8 @@
 		22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRHandshakeHandler.m; sourceTree = "<group>"; };
 		22BFA8C51F250BE500CCB6D5 /* NSError+WRError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+WRError.h"; sourceTree = "<group>"; };
 		22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+WRError.m"; sourceTree = "<group>"; };
+		26EBBB0C1F965CA00091A64E /* NSString+SHA1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+SHA1.h"; sourceTree = "<group>"; };
+		26EBBB0D1F965CA00091A64E /* NSString+SHA1.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+SHA1.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +115,8 @@
 				22BFA8B61F1B46B300CCB6D5 /* NSURL+WebSocket.m */,
 				22BFA8C51F250BE500CCB6D5 /* NSError+WRError.h */,
 				22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */,
+				26EBBB0C1F965CA00091A64E /* NSString+SHA1.h */,
+				26EBBB0D1F965CA00091A64E /* NSString+SHA1.m */,
 			);
 			path = categories;
 			sourceTree = "<group>";
@@ -196,6 +201,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				26EBBB0E1F965CA00091A64E /* NSString+SHA1.m in Sources */,
 				22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */,
 				22BFA8B21F14035200CCB6D5 /* WRWebsocket.m in Sources */,
 				22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */,
@@ -361,6 +367,7 @@
 				22BFA8AC1F14022000CCB6D5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
