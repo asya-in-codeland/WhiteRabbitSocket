@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */; };
+		229AD5931F9CE64800CD3595 /* WRSSLPinningPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD5921F9CE64800CD3595 /* WRSSLPinningPolicy.m */; };
+		229AD5961F9CEE3A00CD3595 /* WRCustomPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD5951F9CEE3A00CD3595 /* WRCustomPolicy.m */; };
 		22BFA8981F14022000CCB6D5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8971F14022000CCB6D5 /* main.m */; };
 		22BFA89B1F14022000CCB6D5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA89A1F14022000CCB6D5 /* AppDelegate.m */; };
 		22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA89D1F14022000CCB6D5 /* ViewController.m */; };
@@ -22,6 +25,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		229AD58E1F9CE62C00CD3595 /* WRServerTrustPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRServerTrustPolicy.h; sourceTree = "<group>"; };
+		229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRServerTrustPolicy.m; sourceTree = "<group>"; };
+		229AD5911F9CE64800CD3595 /* WRSSLPinningPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRSSLPinningPolicy.h; sourceTree = "<group>"; };
+		229AD5921F9CE64800CD3595 /* WRSSLPinningPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRSSLPinningPolicy.m; sourceTree = "<group>"; };
+		229AD5941F9CEE3A00CD3595 /* WRCustomPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRCustomPolicy.h; sourceTree = "<group>"; };
+		229AD5951F9CEE3A00CD3595 /* WRCustomPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRCustomPolicy.m; sourceTree = "<group>"; };
 		22BFA8931F14022000CCB6D5 /* WhiteRabbitSocket.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhiteRabbitSocket.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		22BFA8971F14022000CCB6D5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		22BFA8991F14022000CCB6D5 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -58,6 +67,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		229AD58A1F9CE0DE00CD3595 /* secure */ = {
+			isa = PBXGroup;
+			children = (
+				229AD58E1F9CE62C00CD3595 /* WRServerTrustPolicy.h */,
+				229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */,
+				229AD5911F9CE64800CD3595 /* WRSSLPinningPolicy.h */,
+				229AD5921F9CE64800CD3595 /* WRSSLPinningPolicy.m */,
+				229AD5941F9CEE3A00CD3595 /* WRCustomPolicy.h */,
+				229AD5951F9CEE3A00CD3595 /* WRCustomPolicy.m */,
+			);
+			path = secure;
+			sourceTree = "<group>";
+		};
+		229AD58B1F9CE0DE00CD3595 /* compression */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = compression;
+			sourceTree = "<group>";
+		};
 		22BFA88A1F14022000CCB6D5 = {
 			isa = PBXGroup;
 			children = (
@@ -77,6 +106,8 @@
 		22BFA8951F14022000CCB6D5 /* WhiteRabbitSocket */ = {
 			isa = PBXGroup;
 			children = (
+				229AD58B1F9CE0DE00CD3595 /* compression */,
+				229AD58A1F9CE0DE00CD3595 /* secure */,
 				22BFA8B31F1B45F900CCB6D5 /* categories */,
 				22BFA8B41F1B45F900CCB6D5 /* utils */,
 				22BFA8AF1F14033B00CCB6D5 /* websocket */,
@@ -208,13 +239,16 @@
 			files = (
 				26EBBB0E1F965CA00091A64E /* NSString+SHA1.m in Sources */,
 				22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */,
+				229AD5931F9CE64800CD3595 /* WRSSLPinningPolicy.m in Sources */,
 				22BFA8B21F14035200CCB6D5 /* WRWebsocket.m in Sources */,
 				22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */,
+				229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */,
 				22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */,
 				26EBBB141F96691F0091A64E /* WRHandshakeRequestBuilder.m in Sources */,
 				22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */,
 				22BFA89B1F14022000CCB6D5 /* AppDelegate.m in Sources */,
 				22BFA8981F14022000CCB6D5 /* main.m in Sources */,
+				229AD5961F9CEE3A00CD3595 /* WRCustomPolicy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
