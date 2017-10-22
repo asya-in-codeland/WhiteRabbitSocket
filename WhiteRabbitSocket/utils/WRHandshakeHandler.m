@@ -76,6 +76,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
             websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                          error:(NSError *__autoreleasing *)error
 {
+    //TODO: error may be nil, unexpectedly ><
     NSInteger responseCode = CFHTTPMessageGetResponseStatusCode(response);
     if (responseCode >= 400) {
         *error = [NSError errorWithCode:responseCode description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];

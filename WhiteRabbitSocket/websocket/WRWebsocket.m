@@ -40,7 +40,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         configuration.requestCachePolicy = request.cachePolicy;
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
-        //_streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
+        _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
     }
     return self;
 }
@@ -51,12 +51,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 {
     //TODO: connection via proxy
     
-    [_streamTask startSecureConnection];
+//    [_streamTask startSecureConnection];
     [_streamTask resume];
-    
-    CFHTTPMessageRef _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
-    NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:@"" cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
-    
+
     NSMutableData *data = [NSMutableData dataWithLength:16];
     int result = SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
     if (result != 0) {
@@ -64,10 +61,13 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }
     NSString *securityKeyString = [data base64EncodedStringWithOptions:0];
     
-    NSURLRequest *handshakeRequest = [WRHandshakeRequestBuilder handshakeRequestWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:13 error:nil];
+    CFHTTPMessageRef _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
+    NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
+    
+//    NSURLRequest *handshakeRequest = [WRHandshakeRequestBuilder handshakeRequestWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:13 error:nil];
     // TODO: add headers from requestBuilder
-    _handshakeTask = [_session dataTaskWithRequest:handshakeRequest];
-                    
+//    _handshakeTask = [_session dataTaskWithRequest:handshakeRequest];
+//    [_handshakeTask resume];
 
     //TODO: writeData is proceed synchroniously, should we do smth with it?
     __weak typeof(self) wself = self;
@@ -85,20 +85,29 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
             //TODO: move to callback queue
             [wself.delegate websocket:wself didFailWithError:error];
         } else {
-            BOOL isHeaderComplete = CFHTTPMessageIsHeaderComplete(_handshakeResponse);
-            if (!(isHeaderComplete ^ atEOF)) {
-                //TODO: move to callback queue
-                NSError *error = [NSError errorWithCode:2433 description:@""];
-                [wself.delegate websocket:wself didFailWithError:error];
-            }
-            else if (!isHeaderComplete) {
-                CFHTTPMessageAppendBytes(_handshakeResponse, (const UInt8 *)data.bytes, data.length);
-            }
-            else {
-                BOOL isConnectionEstablished = [WRHandshakeHandler parseHandshakeResponse:_handshakeResponse securityKey:@"" websocketProtocols:nil error:nil];
-                //TODO
+            CFHTTPMessageRef handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
+            CFHTTPMessageAppendBytes(handshakeResponse, (const UInt8 *)data.bytes, data.length);
+            BOOL isConnectionEstablished = [WRHandshakeHandler parseHandshakeResponse:handshakeResponse securityKey:securityKeyString websocketProtocols:nil error:nil];
+            if (isConnectionEstablished) {
                 [wself.delegate websocketDidEstablishConnection:wself];
             }
+
+            // TODO: For handshake isHeaderComplete is false, I have no idea why ><
+            // Need re-check it for normal response
+//            BOOL isHeaderComplete = CFHTTPMessageIsHeaderComplete(_handshakeResponse);
+//            if (!(isHeaderComplete ^ atEOF)) {
+//                //TODO: move to callback queue
+//                NSError *error = [NSError errorWithCode:2433 description:@""];
+//                [wself.delegate websocket:wself didFailWithError:error];
+//            }
+//            else if (!isHeaderComplete) {
+//                CFHTTPMessageAppendBytes(_handshakeResponse, (const UInt8 *)data.bytes, data.length);
+//            }
+//            else {
+//                BOOL isConnectionEstablished = [WRHandshakeHandler parseHandshakeResponse:_handshakeResponse securityKey:securityKeyString websocketProtocols:nil error:nil];
+//                //TODO
+//                [wself.delegate websocketDidEstablishConnection:wself];
+//            }
         }
     }];
 }
@@ -128,11 +137,32 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 - (void)URLSession:(NSURLSession *)session
           dataTask:(NSURLSessionDataTask *)dataTask
 didReceiveResponse:(NSURLResponse *)response
- completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
+{
     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
     NSLog(@"Did receive response %@", httpResponse.allHeaderFields);
 }
 
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error
+{
+    NSLog(@"session:didBecomeInvalidWithError: %@", error.localizedDescription);
+}
+
+#pragma mark - NSURLSessionTaskDelegate
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+   didSendBodyData:(int64_t)bytesSent
+    totalBytesSent:(int64_t)totalBytesSent
+totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend
+{
+    NSLog(@"session:task:didSendBodyData:totalBytesSent:totalBytesExpectedToSend");
+}
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didCompleteWithError:(nullable NSError *)error
+{
+    NSLog(@"session:task:didCompleteWithError: %@", error.localizedDescription);
+}
 
 #pragma mark - Private Methods
 
