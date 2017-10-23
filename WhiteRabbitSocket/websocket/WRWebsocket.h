@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+@class WRServerTrustPolicy;
 @protocol WRWebsocketDelegate;
 
 FOUNDATION_EXPORT NSString * _Nonnull const kWRWebsocketErrorDomain;
@@ -24,9 +25,10 @@ typedef NS_ENUM(NSInteger, WRWebsocketState) {
 @property (nonatomic, weak, nullable) id<WRWebsocketDelegate> delegate;
 @property (nonatomic, assign, readonly) WRWebsocketState state;
 
-- (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request NS_DESIGNATED_INITIALIZER;
+- (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request;
+- (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request securePolicy:(nonnull WRServerTrustPolicy *)serverTrustPolicy NS_DESIGNATED_INITIALIZER;
 
-- (nullable instancetype)init __attribute__((unavailable("Use designated initializer -initWithURLRequest: instead.")));
+- (nullable instancetype)init __attribute__((unavailable("Use designated initializer -initWithURLRequest:securePolicy:securePolicy: instead.")));
 - (nullable instancetype)new __attribute__((unavailable("Use designated initializer -initWithURLRequest: instead.")));
 
 - (void)open;

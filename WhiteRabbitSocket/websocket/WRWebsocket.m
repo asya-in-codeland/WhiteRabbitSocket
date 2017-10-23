@@ -12,6 +12,7 @@
 #import "WRHandshakeHandler.h"
 #import "NSError+WRError.h"
 #import "WRHandshakeRequestBuilder.h"
+#import "WRServerTrustPolicy.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -26,18 +27,27 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSURLSession *_session;
     NSURLSessionStreamTask *_streamTask;
     NSURLSessionDataTask *_handshakeTask;
+    WRServerTrustPolicy *_securePolicy;
 }
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request
 {
+    return [self initWithURLRequest:request securePolicy:[WRServerTrustPolicy defaultEvaluationPolicy]];
+}
+
+- (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy
+{
     self = [super init];
     if (self != nil) {
         _initialRequest = request.copy;
-        
+        _securePolicy = serverTrustPolicy;
+
         //TODO: setup configuration settings
         NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
         configuration.timeoutIntervalForRequest = request.timeoutInterval;
         configuration.requestCachePolicy = request.cachePolicy;
+        configuration.TLSMinimumSupportedProtocol = _securePolicy.minTLSSupportedProtocol;
+        configuration.TLSMaximumSupportedProtocol = _securePolicy.maxTLSSupportedProtocol;
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
