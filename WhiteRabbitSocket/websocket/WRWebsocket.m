@@ -11,7 +11,6 @@
 #import "NSURL+WebSocket.h"
 #import "WRHandshakeHandler.h"
 #import "NSError+WRError.h"
-#import "WRHandshakeRequestBuilder.h"
 #import "WRServerTrustPolicy.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
@@ -26,7 +25,6 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSURLRequest *_initialRequest;
     NSURLSession *_session;
     NSURLSessionStreamTask *_streamTask;
-    NSURLSessionDataTask *_handshakeTask;
     WRServerTrustPolicy *_securePolicy;
 }
 
@@ -73,11 +71,6 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     
     CFHTTPMessageRef _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
     NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
-    
-//    NSURLRequest *handshakeRequest = [WRHandshakeRequestBuilder handshakeRequestWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:13 error:nil];
-    // TODO: add headers from requestBuilder
-//    _handshakeTask = [_session dataTaskWithRequest:handshakeRequest];
-//    [_handshakeTask resume];
 
     //TODO: writeData is proceed synchroniously, should we do smth with it?
     __weak typeof(self) wself = self;
