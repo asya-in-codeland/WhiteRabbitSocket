@@ -20,6 +20,6 @@ typedef NS_ENUM(NSInteger, WROpCode)
 @interface WRFrameHandler : NSObject
 
 + (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error;
-+ (NSData *)parseDateFromFrame:(NSData *)frame error:(NSError **)error;
++ (NSData *)parseFrameFromData:(NSData *)data error:(NSError **)error;
 
 @end

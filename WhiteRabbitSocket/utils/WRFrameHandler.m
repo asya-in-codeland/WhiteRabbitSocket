@@ -23,6 +23,7 @@ static const uint8_t WRPayloadLenMask = 0x7F;
 + (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error
 {
     if (data == nil) {
+        //TODO: add error
         return nil;
     }
 
@@ -86,9 +87,57 @@ static const uint8_t WRPayloadLenMask = 0x7F;
     return frameData;
 }
 
-+ (NSData *)parseDateFromFrame:(NSData *)frame error:(NSError **)error
++ (NSData *)parseFrameFromData:(NSData *)data error:(NSError **)error
 {
-    return nil;
+    const uint8_t *headerBuffer = data.bytes;
+    assert(data.length >= 2);
+
+    //TODO: check rsv flags for deflate
+    if (headerBuffer[0] & WRRsvMask) {
+        *error = [NSError errorWithCode:2133 description: @"Server used RSV bits."];
+        return nil;
+    }
+
+    uint8_t receivedOpcode = (WROpCodeMask & headerBuffer[0]);
+
+    BOOL isControlFrame = (receivedOpcode == WROpCodePing || receivedOpcode == WROpCodePong || receivedOpcode == WROpCodeConnectionClose);
+
+    //TODO: fragmentation
+//    if (!isControlFrame && receivedOpcode != 0 && sself->_currentFrameCount > 0) {
+//        [sself _closeWithProtocolError:@"all data frames after the initial data frame must have opcode 0"];
+//        return;
+//    }
+//
+//    if (receivedOpcode == 0 && sself->_currentFrameCount == 0) {
+//        [sself _closeWithProtocolError:@"cannot continue a message"];
+//        return;
+//    }
+//
+//    header.opcode = receivedOpcode == 0 ? sself->_currentFrameOpcode : receivedOpcode;
+
+    BOOL fin = !!(WRFinMask & headerBuffer[0]);
+
+
+    BOOL masked = !!(WRMaskMask & headerBuffer[1]);
+    uint64_t payload_length = WRPayloadLenMask & headerBuffer[1];
+
+    headerBuffer = NULL;
+
+    if (masked) {
+        *error = [NSError errorWithCode:2133 description: @"Client must receive unmasked data."];
+        return nil;
+    }
+
+    NSLog(@"fin: %d, masked: %d, length: %llu", fin, masked, payload_length);
+    return [NSData dataWithBytes:(data.bytes + 2) length:data.length - 2];
+
+//    size_t extra_bytes_needed = 0;
+//
+//    if (payload_length == 126) {
+//        extra_bytes_needed += sizeof(uint16_t);
+//    } else if (payload_length == 127) {
+//        extra_bytes_needed += sizeof(uint64_t);
+//    }
 }
 
 @end

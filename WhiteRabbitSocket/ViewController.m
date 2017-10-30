@@ -20,7 +20,12 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    
+
+    UIButton *bbutton = [[UIButton alloc] initWithFrame:CGRectMake(20, 50, 100, 40)];
+    bbutton.backgroundColor = [UIColor redColor];
+    [bbutton addTarget:self action:@selector(onBButonTap) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:bbutton];
+
     NSURL *handshakeTestUrl = [NSURL URLWithString:@"ws://echo.websocket.org"];
     NSURLRequest *handshakeRequest = [NSURLRequest requestWithURL:handshakeTestUrl];
     
@@ -29,9 +34,14 @@
 }
 
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)onBButonTap
+{
+    NSError *error;
+    BOOL result = [_webSocket sendMessage:@"Kek" error:&error];
+
+    if (!result) {
+        NSLog(@"error: %@", error.localizedDescription);
+    }
 }
 
 

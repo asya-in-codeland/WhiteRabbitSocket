@@ -12,6 +12,7 @@
 #import "WRHandshakeHandler.h"
 #import "NSError+WRError.h"
 #import "WRServerTrustPolicy.h"
+#import "WRFrameHandler.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -94,23 +95,6 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
             if (isConnectionEstablished) {
                 [wself.delegate websocketDidEstablishConnection:wself];
             }
-
-            // TODO: For handshake isHeaderComplete is false, I have no idea why ><
-            // Need re-check it for normal response
-//            BOOL isHeaderComplete = CFHTTPMessageIsHeaderComplete(_handshakeResponse);
-//            if (!(isHeaderComplete ^ atEOF)) {
-//                //TODO: move to callback queue
-//                NSError *error = [NSError errorWithCode:2433 description:@""];
-//                [wself.delegate websocket:wself didFailWithError:error];
-//            }
-//            else if (!isHeaderComplete) {
-//                CFHTTPMessageAppendBytes(_handshakeResponse, (const UInt8 *)data.bytes, data.length);
-//            }
-//            else {
-//                BOOL isConnectionEstablished = [WRHandshakeHandler parseHandshakeResponse:_handshakeResponse securityKey:securityKeyString websocketProtocols:nil error:nil];
-//                //TODO
-//                [wself.delegate websocketDidEstablishConnection:wself];
-//            }
         }
     }];
 }
@@ -125,9 +109,38 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     return NO;
 }
 
-- (BOOL)sendMessage:(NSString *)message error:(NSError **)error
+- (BOOL)sendMessage:(NSString *)message error:(NSError **)outError
 {
-    return NO;
+    __weak typeof(self) wself = self;
+    NSData *strData = [message dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *data = [WRFrameHandler buildFrameFromData:strData opCode:WROpCodeTextFrame error:outError];
+
+    if (data == nil) {
+        return NO;
+    }
+
+    [_streamTask writeData:data timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
+        if (error != nil) {
+            //TODO: move to callback queue
+            [wself.delegate websocket:wself didFailWithError:error];
+        } else {
+            NSLog(@"OK");
+        }
+    }];
+
+    [_streamTask readDataOfMinLength:2 maxLength:kWRWebsocketChunkLength timeout:0 completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
+        if (error != nil) {
+            [wself.delegate websocket:wself didFailWithError:error];
+        }
+        else {
+            NSData *result = [WRFrameHandler parseFrameFromData:data error:outError];
+            NSLog(@"Resilt: %@", [[NSString alloc] initWithData:result encoding:NSUTF8StringEncoding]);
+        }
+    }];
+    
+    return YES;
+
+
 }
 
 - (BOOL)sendPing:(NSData *)data error:(NSError **)error
