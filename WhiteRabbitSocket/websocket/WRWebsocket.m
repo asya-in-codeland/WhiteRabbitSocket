@@ -12,7 +12,8 @@
 #import "WRHandshakeHandler.h"
 #import "NSError+WRError.h"
 #import "WRServerTrustPolicy.h"
-#import "WRFrameHandler.h"
+#import "WRFrameWriter.h"
+#import "WRFrameReader.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -27,6 +28,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSURLSession *_session;
     NSURLSessionStreamTask *_streamTask;
     WRServerTrustPolicy *_securePolicy;
+    WRFrameReader *_frameReader;
 }
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request
@@ -70,7 +72,6 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }
     NSString *securityKeyString = [data base64EncodedStringWithOptions:0];
     
-    CFHTTPMessageRef _handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
     NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
 
     //TODO: writeData is proceed synchroniously, should we do smth with it?
@@ -113,7 +114,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 {
     __weak typeof(self) wself = self;
     NSData *strData = [message dataUsingEncoding:NSUTF8StringEncoding];
-    NSData *data = [WRFrameHandler buildFrameFromData:strData opCode:WROpCodeTextFrame error:outError];
+    NSData *data = [WRFrameWriter buildFrameFromData:strData opCode:WROpCodeTextFrame error:outError];
 
     if (data == nil) {
         return NO;
@@ -128,13 +129,21 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         }
     }];
 
+    _frameReader = [WRFrameReader new];
+    _frameReader.onTextFrameFinish = ^(NSString *text) {
+        NSLog(@"Resilt: %@", text);
+    };
+    
     [_streamTask readDataOfMinLength:2 maxLength:kWRWebsocketChunkLength timeout:0 completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
         if (error != nil) {
             [wself.delegate websocket:wself didFailWithError:error];
         }
         else {
-            NSData *result = [WRFrameHandler parseFrameFromData:data error:outError];
-            NSLog(@"Resilt: %@", [[NSString alloc] initWithData:result encoding:NSUTF8StringEncoding]);
+            NSError *readerError;
+            BOOL result = [_frameReader readData:data error:&readerError];
+            if (!result) {
+                [wself.delegate websocket:wself didFailWithError:readerError];
+            }
         }
     }];
     

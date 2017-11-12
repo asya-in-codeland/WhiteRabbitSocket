@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22070A131FB874A600F43FC3 /* WRIteratableData.m in Sources */ = {isa = PBXBuildFile; fileRef = 22070A121FB874A600F43FC3 /* WRIteratableData.m */; };
+		22070A1B1FB874CF00F43FC3 /* WRFrameWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 22070A171FB874CF00F43FC3 /* WRFrameWriter.m */; };
+		22070A1C1FB874CF00F43FC3 /* WRFrameReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 22070A181FB874CF00F43FC3 /* WRFrameReader.m */; };
 		229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */; };
 		229AD5931F9CE64800CD3595 /* WRSSLPinningPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD5921F9CE64800CD3595 /* WRSSLPinningPolicy.m */; };
 		229AD5961F9CEE3A00CD3595 /* WRCustomPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD5951F9CEE3A00CD3595 /* WRCustomPolicy.m */; };
@@ -22,12 +25,19 @@
 		22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8B61F1B46B300CCB6D5 /* NSURL+WebSocket.m */; };
 		22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */; };
 		22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */; };
-		261C5F601F9E4F7600702814 /* WRFrameHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 261C5F5F1F9E4F7600702814 /* WRFrameHandler.m */; };
 		261C5F661F9E574400702814 /* WRSIMDFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 261C5F651F9E574400702814 /* WRSIMDFunction.m */; };
 		26EBBB0E1F965CA00091A64E /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 26EBBB0D1F965CA00091A64E /* NSString+SHA1.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		22070A111FB874A600F43FC3 /* WRIteratableData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRIteratableData.h; sourceTree = "<group>"; };
+		22070A121FB874A600F43FC3 /* WRIteratableData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRIteratableData.m; sourceTree = "<group>"; };
+		22070A151FB874CF00F43FC3 /* WRFrameReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRFrameReader.h; sourceTree = "<group>"; };
+		22070A161FB874CF00F43FC3 /* WRFrameHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRFrameHeader.h; sourceTree = "<group>"; };
+		22070A171FB874CF00F43FC3 /* WRFrameWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRFrameWriter.m; sourceTree = "<group>"; };
+		22070A181FB874CF00F43FC3 /* WRFrameReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRFrameReader.m; sourceTree = "<group>"; };
+		22070A191FB874CF00F43FC3 /* WRFrameMasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRFrameMasks.h; sourceTree = "<group>"; };
+		22070A1A1FB874CF00F43FC3 /* WRFrameWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRFrameWriter.h; sourceTree = "<group>"; };
 		229AD58E1F9CE62C00CD3595 /* WRServerTrustPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRServerTrustPolicy.h; sourceTree = "<group>"; };
 		229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRServerTrustPolicy.m; sourceTree = "<group>"; };
 		229AD5911F9CE64800CD3595 /* WRSSLPinningPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRSSLPinningPolicy.h; sourceTree = "<group>"; };
@@ -57,8 +67,6 @@
 		22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRHandshakeHandler.m; sourceTree = "<group>"; };
 		22BFA8C51F250BE500CCB6D5 /* NSError+WRError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+WRError.h"; sourceTree = "<group>"; };
 		22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+WRError.m"; sourceTree = "<group>"; };
-		261C5F5E1F9E4F7600702814 /* WRFrameHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRFrameHandler.h; sourceTree = "<group>"; };
-		261C5F5F1F9E4F7600702814 /* WRFrameHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRFrameHandler.m; sourceTree = "<group>"; };
 		261C5F641F9E574400702814 /* WRSIMDFunction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRSIMDFunction.h; sourceTree = "<group>"; };
 		261C5F651F9E574400702814 /* WRSIMDFunction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRSIMDFunction.m; sourceTree = "<group>"; };
 		26EBBB0C1F965CA00091A64E /* NSString+SHA1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+SHA1.h"; sourceTree = "<group>"; };
@@ -76,6 +84,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		22070A141FB874CF00F43FC3 /* frames */ = {
+			isa = PBXGroup;
+			children = (
+				22070A191FB874CF00F43FC3 /* WRFrameMasks.h */,
+				22070A161FB874CF00F43FC3 /* WRFrameHeader.h */,
+				22070A1A1FB874CF00F43FC3 /* WRFrameWriter.h */,
+				22070A171FB874CF00F43FC3 /* WRFrameWriter.m */,
+				22070A151FB874CF00F43FC3 /* WRFrameReader.h */,
+				22070A181FB874CF00F43FC3 /* WRFrameReader.m */,
+			);
+			path = frames;
+			sourceTree = "<group>";
+		};
 		229AD58A1F9CE0DE00CD3595 /* secure */ = {
 			isa = PBXGroup;
 			children = (
@@ -119,6 +140,7 @@
 		22BFA8951F14022000CCB6D5 /* WhiteRabbitSocket */ = {
 			isa = PBXGroup;
 			children = (
+				22070A141FB874CF00F43FC3 /* frames */,
 				229AD58B1F9CE0DE00CD3595 /* compression */,
 				229AD58A1F9CE0DE00CD3595 /* secure */,
 				22BFA8B31F1B45F900CCB6D5 /* categories */,
@@ -173,10 +195,10 @@
 			children = (
 				22BFA8BF1F1B5BB400CCB6D5 /* WRHandshakeHandler.h */,
 				22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */,
-				261C5F5E1F9E4F7600702814 /* WRFrameHandler.h */,
-				261C5F5F1F9E4F7600702814 /* WRFrameHandler.m */,
 				261C5F641F9E574400702814 /* WRSIMDFunction.h */,
 				261C5F651F9E574400702814 /* WRSIMDFunction.m */,
+				22070A111FB874A600F43FC3 /* WRIteratableData.h */,
+				22070A121FB874A600F43FC3 /* WRIteratableData.m */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -253,9 +275,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				26EBBB0E1F965CA00091A64E /* NSString+SHA1.m in Sources */,
-				261C5F601F9E4F7600702814 /* WRFrameHandler.m in Sources */,
+				22070A131FB874A600F43FC3 /* WRIteratableData.m in Sources */,
 				22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */,
 				229AD5931F9CE64800CD3595 /* WRSSLPinningPolicy.m in Sources */,
+				22070A1C1FB874CF00F43FC3 /* WRFrameReader.m in Sources */,
 				22BFA8B21F14035200CCB6D5 /* WRWebsocket.m in Sources */,
 				22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */,
 				229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */,
@@ -263,6 +286,7 @@
 				22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */,
 				22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */,
 				229AD5991F9CF0CC00CD3595 /* WRDataDeflater.m in Sources */,
+				22070A1B1FB874CF00F43FC3 /* WRFrameWriter.m in Sources */,
 				22BFA89B1F14022000CCB6D5 /* AppDelegate.m in Sources */,
 				22BFA8981F14022000CCB6D5 /* main.m in Sources */,
 				229AD5961F9CEE3A00CD3595 /* WRCustomPolicy.m in Sources */,
