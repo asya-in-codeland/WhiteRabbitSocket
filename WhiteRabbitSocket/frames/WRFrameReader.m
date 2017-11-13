@@ -8,9 +8,10 @@
 
 #import "WRFrameReader.h"
 #import "WRFrameHeader.h"
+#import "WRFramePayload.h"
 #import "WRFrameMasks.h"
+#import "WRReadableData.h"
 #import "NSError+WRError.h"
-#import "WRIteratableData.h"
 
 typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     WRFrameReaderStateHeader,
@@ -21,19 +22,16 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 @implementation WRFrameReader {
     WRFrameReaderState _state;
     WRFrameHeader _header;
+    WRFramePayload *_payload;
     NSInteger _framesCount;
-    NSMutableData *_payload;
-    NSUInteger _payloadCapacity;
-    NSMutableData *_payloadExtraLength;
-    NSUInteger _payloadExtraLengthCapacity;
 }
 
 - (BOOL)readData:(NSData *)data error:(NSError *__autoreleasing *)error
 {
-    return [self readIteratableData:[WRIteratableData dataWithData:data] error:error];
+    return [self read:[WRReadableData dataWithData:data] error:error];
 }
 
-- (BOOL)readIteratableData:(WRIteratableData *)data error:(NSError *__autoreleasing *)error
+- (BOOL)read:(WRReadableData *)data error:(NSError *__autoreleasing *)error
 {
     if (data.length == 0) {
         return YES;
@@ -46,53 +44,49 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
                 return NO;
             }
             
-            _payloadExtraLengthCapacity = 0;
+            _payload = [WRFramePayload new];
             
             if (_header.payloadLength == 0) {
                 _state = WRFrameReaderStateHeader;
             }
             else if (_header.payloadLength < 126) {
                 _state = WRFrameReaderStatePayload;
-                _payloadCapacity = _header.payloadLength;
-                _payload = [NSMutableData dataWithCapacity:_payloadCapacity];
+                _payload.capacity = _header.payloadLength;
             }
             else {
                 _state = WRFrameReaderStateExtended;
-                _payloadExtraLengthCapacity = _header.payloadLength == 126 ? sizeof(uint16_t) : sizeof(uint64_t);
-                _payloadExtraLength = [NSMutableData dataWithCapacity:_payloadExtraLengthCapacity];
+                _payload.extraLengthCapacity = _header.payloadLength == 126 ? sizeof(uint16_t) : sizeof(uint64_t);
             }
             
-            return [self readIteratableData:data error:error];
+            return [self read:data error:error];
         }
         case WRFrameReaderStateExtended: {
-            if(_payloadExtraLength.length + data.length < _payloadExtraLengthCapacity) {
-                [_payloadExtraLength appendData:data];
+            if(_payload.extraLengthBuffer.length + data.length < _payload.extraLengthCapacity) {
+                [_payload.extraLengthBuffer appendData:data];
                 return YES;
             }
             
-            NSInteger appendedDataLength = _payloadExtraLengthCapacity - _payloadExtraLength.length;
-            [_payloadExtraLength appendData:[data readDataOfLength:appendedDataLength]];
+            NSInteger appendedDataLength = _payload.extraLengthCapacity - _payload.extraLengthBuffer.length;
+            [_payload.extraLengthBuffer appendData:[data readDataOfLength:appendedDataLength]];
             
             if (_header.payloadLength == 126) {
-                _payloadCapacity = CFSwapInt16BigToHost(*(uint16_t *)_payloadExtraLength.bytes);
+                _payload.capacity = CFSwapInt16BigToHost(*(uint16_t *)_payload.extraLengthBuffer.bytes);
             }
             else if(_header.payloadLength == 127) {
-                _payloadCapacity = CFSwapInt64BigToHost(*(uint64_t *)_payloadExtraLength.bytes);
+                _payload.capacity = CFSwapInt64BigToHost(*(uint64_t *)_payload.extraLengthBuffer.bytes);
             }
             
-            _payload = [NSMutableData dataWithCapacity:_payloadCapacity];
-            
             _state = WRFrameReaderStatePayload;
-            return [self readIteratableData:data error:error];
+            return [self read:data error:error];
         }
         case WRFrameReaderStatePayload: {
-            if(_payload.length + data.length < _payloadCapacity) {
-                [_payloadExtraLength appendData:data];
+            if(_payload.data.length + data.length < _payload.capacity) {
+                [_payload.data appendData:data];
                 return YES;
             }
             
-            NSInteger appendedDataLength = _payloadCapacity - _payload.length;
-            [_payloadExtraLength appendData:[data readDataOfLength:appendedDataLength]];
+            NSInteger appendedDataLength = _payload.capacity - _payload.data.length;
+            [_payload.data appendData:[data readDataOfLength:appendedDataLength]];
             
             if (_header.fin) {
                 [self performCompletionHandler];
@@ -100,7 +94,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             
             _framesCount++;
             _state = WRFrameReaderStateHeader;
-            return [self readIteratableData:data error:error];
+            return [self read:data error:error];
         }
     }
 }
@@ -150,10 +144,10 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 - (void)performCompletionHandler
 {
     if (_header.opcode == WROpCodeTextFrame && _onTextFrameFinish != nil) {
-        _onTextFrameFinish([[NSString alloc] initWithData:_payload encoding:NSUTF8StringEncoding]);
+        _onTextFrameFinish([[NSString alloc] initWithData:_payload.data encoding:NSUTF8StringEncoding]);
     }
     else if (_header.opcode == WROpCodeBinaryFrame && _onDataFrameFinish != nil) {
-        _onDataFrameFinish(_payload);
+        _onDataFrameFinish(_payload.data);
     }
 }
 
