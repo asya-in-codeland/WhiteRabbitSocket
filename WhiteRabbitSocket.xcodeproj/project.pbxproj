@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		22070A1B1FB874CF00F43FC3 /* WRFrameWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 22070A171FB874CF00F43FC3 /* WRFrameWriter.m */; };
 		22070A1C1FB874CF00F43FC3 /* WRFrameReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 22070A181FB874CF00F43FC3 /* WRFrameReader.m */; };
+		22084FB41FC1D2DC00A12EF1 /* WRProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = 22084FB31FC1D2DC00A12EF1 /* WRProxy.m */; };
+		2218BE741FC1DE5E0028662E /* WRProxyConfigure.m in Sources */ = {isa = PBXBuildFile; fileRef = 2218BE731FC1DE5E0028662E /* WRProxyConfigure.m */; };
 		229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */; };
 		229AD5931F9CE64800CD3595 /* WRSSLPinningPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD5921F9CE64800CD3595 /* WRSSLPinningPolicy.m */; };
 		229AD5961F9CEE3A00CD3595 /* WRCustomPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 229AD5951F9CEE3A00CD3595 /* WRCustomPolicy.m */; };
@@ -37,6 +39,10 @@
 		22070A181FB874CF00F43FC3 /* WRFrameReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRFrameReader.m; sourceTree = "<group>"; };
 		22070A191FB874CF00F43FC3 /* WRFrameMasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRFrameMasks.h; sourceTree = "<group>"; };
 		22070A1A1FB874CF00F43FC3 /* WRFrameWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WRFrameWriter.h; sourceTree = "<group>"; };
+		22084FB21FC1D2DC00A12EF1 /* WRProxy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRProxy.h; sourceTree = "<group>"; };
+		22084FB31FC1D2DC00A12EF1 /* WRProxy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRProxy.m; sourceTree = "<group>"; };
+		22084FB51FC1D3F300A12EF1 /* WRProxyConfigure.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRProxyConfigure.h; sourceTree = "<group>"; };
+		2218BE731FC1DE5E0028662E /* WRProxyConfigure.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRProxyConfigure.m; sourceTree = "<group>"; };
 		229AD58E1F9CE62C00CD3595 /* WRServerTrustPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRServerTrustPolicy.h; sourceTree = "<group>"; };
 		229AD58F1F9CE62C00CD3595 /* WRServerTrustPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRServerTrustPolicy.m; sourceTree = "<group>"; };
 		229AD5911F9CE64800CD3595 /* WRSSLPinningPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRSSLPinningPolicy.h; sourceTree = "<group>"; };
@@ -102,6 +108,17 @@
 			path = frames;
 			sourceTree = "<group>";
 		};
+		22084FAE1FC1C79200A12EF1 /* proxy */ = {
+			isa = PBXGroup;
+			children = (
+				22084FB21FC1D2DC00A12EF1 /* WRProxy.h */,
+				22084FB31FC1D2DC00A12EF1 /* WRProxy.m */,
+				22084FB51FC1D3F300A12EF1 /* WRProxyConfigure.h */,
+				2218BE731FC1DE5E0028662E /* WRProxyConfigure.m */,
+			);
+			path = proxy;
+			sourceTree = "<group>";
+		};
 		229AD58A1F9CE0DE00CD3595 /* secure */ = {
 			isa = PBXGroup;
 			children = (
@@ -145,6 +162,7 @@
 		22BFA8951F14022000CCB6D5 /* WhiteRabbitSocket */ = {
 			isa = PBXGroup;
 			children = (
+				22084FAE1FC1C79200A12EF1 /* proxy */,
 				22070A141FB874CF00F43FC3 /* frames */,
 				229AD58B1F9CE0DE00CD3595 /* compression */,
 				229AD58A1F9CE0DE00CD3595 /* secure */,
@@ -288,12 +306,14 @@
 				22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */,
 				265896FB1FB95DC80029FA23 /* WRFramePayload.m in Sources */,
 				229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */,
+				2218BE741FC1DE5E0028662E /* WRProxyConfigure.m in Sources */,
 				261C5F661F9E574400702814 /* WRSIMDFunction.m in Sources */,
 				22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */,
 				22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */,
 				229AD5991F9CF0CC00CD3595 /* WRDataDeflater.m in Sources */,
 				22070A1B1FB874CF00F43FC3 /* WRFrameWriter.m in Sources */,
 				22BFA89B1F14022000CCB6D5 /* AppDelegate.m in Sources */,
+				22084FB41FC1D2DC00A12EF1 /* WRProxy.m in Sources */,
 				22BFA8981F14022000CCB6D5 /* main.m in Sources */,
 				229AD5961F9CEE3A00CD3595 /* WRCustomPolicy.m in Sources */,
 				229AD59C1F9CF0DC00CD3595 /* WRDataInflater.m in Sources */,

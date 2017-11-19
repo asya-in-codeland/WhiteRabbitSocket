@@ -14,4 +14,6 @@
 @property (nonatomic, copy, readonly) NSString *handshakeHost;
 @property (nonatomic, copy, readonly) NSString *baseAuthorization;
 @property (nonatomic, copy, readonly) NSString *origin;
+@property (nonatomic, assign, readonly) BOOL isSecureConnection;
+
 @end

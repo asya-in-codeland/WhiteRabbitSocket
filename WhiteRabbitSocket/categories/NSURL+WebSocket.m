@@ -14,7 +14,7 @@
 {
     NSInteger port = self.port.integerValue;
     if (port == 0) {
-        if([self.scheme isEqualToString:@"wss"] || [self.scheme isEqualToString:@"https"]){
+        if(self.isSecureConnection){
             port = 443;
         } else {
             port = 80;
@@ -60,5 +60,11 @@
     }
     
     return origin;
+}
+
+- (BOOL)isSecureConnection
+{
+    NSString *scheme = self.scheme.lowercaseString;
+    return ([scheme isEqualToString:@"wss"] || [scheme isEqualToString:@"https"]);
 }
 @end
