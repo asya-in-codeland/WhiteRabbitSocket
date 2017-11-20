@@ -1,5 +1,5 @@
 //
-//  WRProxySettingsHandler.h
+//  WRProxyFetcher.h
 //  WhiteRabbitSocket
 //
 //  Created by Anastasia Sviridenko on 19/11/2017.
@@ -10,12 +10,9 @@
 
 @class WRProxy;
 
-typedef void(^WRProxyConfigureCompletionHandler)(WRProxy *proxy);
-
-@interface WRProxyConfigure: NSObject
+@interface WRProxyFetcher: NSObject
 
 - (instancetype)initWithURL:(NSURL *)url;
-
-- (void)getProxyWithCompletionHandler:(WRProxyConfigureCompletionHandler)completionHandler;
+- (void)fetchProxyWithCompletionHandler:(void(^)(WRProxy *proxy))completionHandler;
 
 @end

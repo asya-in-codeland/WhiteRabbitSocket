@@ -1,19 +1,19 @@
 //
-//  WRProxySettingsHandler.m
+//  WRProxyFetcher.m
 //  WhiteRabbitSocket
 //
 //  Created by Anastasia Sviridenko on 19/11/2017.
 //  Copyright © 2017 ASya. All rights reserved.
 //
 
-#import "WRProxyConfigure.h"
+#import "WRProxyFetcher.h"
 #import "WRProxy.h"
 #import "NSURL+WebSocket.h"
 
-@implementation WRProxyConfigure {
-    WRProxy *_proxy;
+@implementation WRProxyFetcher {
     NSURL *_url;
-    WRProxyConfigureCompletionHandler _completionHandler;
+    WRProxy *_proxy;
+    void(^_completionHandler)(WRProxy *proxy);
 }
 
 - (instancetype)initWithURL:(NSURL *)url
@@ -27,17 +27,15 @@
 
 #pragma mark - Public
 
-- (void)getProxyWithCompletionHandler:(WRProxyConfigureCompletionHandler)completionHandler
+- (void)fetchProxyWithCompletionHandler:(void(^)(WRProxy *proxy))completionHandler
 {
     _completionHandler = completionHandler;
-    _proxy = [WRProxy new];
-    
-    [self configureProxy];
+    [self fetchProxy];
 }
 
 #pragma mark - Private
 
-- (void)configureProxy
+- (void)fetchProxy
 {
     NSDictionary *proxySettings = CFBridgingRelease(CFNetworkCopySystemProxySettings());
     
@@ -49,28 +47,28 @@
         return;
     }
     
-    NSDictionary *settings = [proxies objectAtIndex:0];
+    NSDictionary *settings = proxies[0];
     NSString *proxyType = settings[(NSString *)kCFProxyTypeKey];
     if ([proxyType isEqualToString:(NSString *)kCFProxyTypeAutoConfigurationURL]) {
         NSURL *pacURL = settings[(NSString *)kCFProxyAutoConfigurationURLKey];
-        if (pacURL) {
-            [self fetchPAC:pacURL withProxySettings:proxySettings];
+        if (pacURL != nil) {
+            [self fetchPACURL:pacURL settings:proxySettings];
             return;
         }
     }
     if ([proxyType isEqualToString:(__bridge NSString *)kCFProxyTypeAutoConfigurationJavaScript]) {
         NSString *script = settings[(__bridge NSString *)kCFProxyAutoConfigurationJavaScriptKey];
         if (script) {
-            [self runPACScript:script withProxySettings:proxySettings];
+            [self performPACScript:script settings:proxySettings];
             return;
         }
     }
-    [self readProxySettingWithType:proxyType settings:settings];
+    [self buildProxyWithType:proxyType settings:settings];
     
     [self onProcessCompletion];
 }
 
-- (void)fetchPAC:(NSURL *)PACurl withProxySettings:(NSDictionary *)proxySettings
+- (void)fetchPACURL:(NSURL *)PACurl settings:(NSDictionary *)settings
 {
     if ([PACurl isFileURL]) {
         NSError *error = nil;
@@ -79,7 +77,7 @@
         if (error != nil) {
             [self onProcessCompletion];
         } else {
-            [self runPACScript:script withProxySettings:proxySettings];
+            [self performPACScript:script settings:settings];
         }
         return;
     }
@@ -101,12 +99,12 @@
             [self onProcessCompletion];
         } else {
             NSString *script = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            [sself runPACScript:script withProxySettings:proxySettings];
+            [sself performPACScript:script settings:settings];
         }
     }] resume];
 }
 
-- (void)runPACScript:(NSString *)script withProxySettings:(NSDictionary *)proxySettings
+- (void)performPACScript:(NSString *)script settings:(NSDictionary *)proxySettings
 {
     if (script == nil) {
         [self onProcessCompletion];
@@ -124,12 +122,13 @@
     if (err == nil && proxies.count > 0) {
         NSDictionary *settings = [proxies objectAtIndex:0];
         NSString *proxyType = settings[(NSString *)kCFProxyTypeKey];
-        [self readProxySettingWithType:proxyType settings:settings];
+        [self buildProxyWithType:proxyType settings:settings];
     }
+
     [self onProcessCompletion];
 }
 
-- (void)readProxySettingWithType:(NSString *)proxyType settings:(NSDictionary *)settings
+- (void)buildProxyWithType:(NSString *)proxyType settings:(NSDictionary *)settings
 {
     if ([proxyType isEqualToString:(NSString *)kCFProxyTypeHTTP] ||
         [proxyType isEqualToString:(NSString *)kCFProxyTypeHTTPS]) {
