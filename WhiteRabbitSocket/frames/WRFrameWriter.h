@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "WRFrameHeader.h"
+#import "WRFrame.h"
 
 @interface WRFrameWriter : NSObject
 

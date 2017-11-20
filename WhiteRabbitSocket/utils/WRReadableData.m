@@ -10,6 +10,7 @@
 
 @implementation WRReadableData {
     NSUInteger _offset;
+    NSData *_data;
 }
 
 - (instancetype)initWithData:(NSData *)data
@@ -23,18 +24,8 @@
 
 - (NSData *)readDataOfLength:(NSUInteger)length
 {
-    if (_offset >= _data.length) {
-        return nil;
-    }
-
-    NSUInteger possibleLength = MIN(length, _data.length - _offset - 1);
-    if (possibleLength <= 0) {
-        return nil;
-    }
-
-    NSData *result = [NSData dataWithBytes:(_data.bytes + _offset) length:possibleLength];
-    _offset += possibleLength;
-
+    NSData *result = [self getDataOfLength:length];
+    _offset += result.length;
     return result;
 }
 
@@ -45,7 +36,28 @@
 
 - (NSUInteger)length
 {
-    return _data.length;
+    return _data.length - _offset;
+}
+
+- (NSData *)data
+{
+    return [self getDataOfLength:self.length];
+}
+
+#pragma mark - Private
+
+- (NSData *)getDataOfLength:(NSUInteger)length
+{
+    if (_offset >= _data.length) {
+        return nil;
+    }
+
+    NSUInteger possibleLength = MIN(length, self.length);
+    if (possibleLength == 0) {
+        return nil;
+    }
+
+    return [NSData dataWithBytes:(_data.bytes + _offset) length:possibleLength];
 }
 
 @end

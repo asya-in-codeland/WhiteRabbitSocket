@@ -14,6 +14,7 @@
 #import "WRServerTrustPolicy.h"
 #import "WRFrameWriter.h"
 #import "WRFrameReader.h"
+#import "WRReadableData.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -133,23 +134,10 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     _frameReader.onTextFrameFinish = ^(NSString *text) {
         NSLog(@"Resilt: %@", text);
     };
-    
-    [_streamTask readDataOfMinLength:2 maxLength:kWRWebsocketChunkLength timeout:0 completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
-        if (error != nil) {
-            [wself.delegate websocket:wself didFailWithError:error];
-        }
-        else {
-            NSError *readerError;
-            BOOL result = [_frameReader readData:data error:&readerError];
-            if (!result) {
-                [wself.delegate websocket:wself didFailWithError:readerError];
-            }
-        }
-    }];
-    
+
+    [self readSocketData];
+
     return YES;
-
-
 }
 
 - (BOOL)sendPing:(NSData *)data error:(NSError **)error
@@ -157,38 +145,28 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     return NO;
 }
 
-#pragma mark - NSURLSessionTaksDelegate
-
-- (void)URLSession:(NSURLSession *)session
-          dataTask:(NSURLSessionDataTask *)dataTask
-didReceiveResponse:(NSURLResponse *)response
- completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
-{
-    NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
-    NSLog(@"Did receive response %@", httpResponse.allHeaderFields);
-}
-
-- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error
-{
-    NSLog(@"session:didBecomeInvalidWithError: %@", error.localizedDescription);
-}
-
-#pragma mark - NSURLSessionTaskDelegate
-
-- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
-   didSendBodyData:(int64_t)bytesSent
-    totalBytesSent:(int64_t)totalBytesSent
-totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend
-{
-    NSLog(@"session:task:didSendBodyData:totalBytesSent:totalBytesExpectedToSend");
-}
-
-- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
-didCompleteWithError:(nullable NSError *)error
-{
-    NSLog(@"session:task:didCompleteWithError: %@", error.localizedDescription);
-}
-
 #pragma mark - Private Methods
+
+- (void)readSocketData
+{
+    __weak typeof(self) wself = self;
+    [_streamTask readDataOfMinLength:2 maxLength:kWRWebsocketChunkLength timeout:0 completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
+        if (error != nil) {
+            [wself.delegate websocket:wself didFailWithError:error];
+        }
+        else {
+            NSLog(@"Start reading");
+            NSError *readerError;
+            BOOL result = [_frameReader readData:data error:&readerError];
+            if (!result) {
+                [wself.delegate websocket:wself didFailWithError:readerError];
+            }
+
+            NSLog(@"Finish reading");
+
+            [wself readSocketData];
+        }
+    }];
+}
 
 @end
