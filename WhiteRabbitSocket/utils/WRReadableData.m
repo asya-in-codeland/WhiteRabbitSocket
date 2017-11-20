@@ -12,18 +12,27 @@
     NSUInteger _offset;
 }
 
-- (WRReadableData *)readDataOfLength:(NSUInteger)length
+- (instancetype)initWithData:(NSData *)data
 {
-    if (_offset >= self.length) {
+    self = [super init];
+    if (self != nil) {
+        _data = data.copy;
+    }
+    return self;
+}
+
+- (NSData *)readDataOfLength:(NSUInteger)length
+{
+    if (_offset >= _data.length) {
         return nil;
     }
 
-    NSUInteger possibleLength = MIN(length, self.length - _offset - 1);
+    NSUInteger possibleLength = MIN(length, _data.length - _offset - 1);
     if (possibleLength <= 0) {
         return nil;
     }
 
-    WRReadableData *result = [WRReadableData dataWithBytes:(self.bytes + _offset) length:possibleLength];
+    NSData *result = [NSData dataWithBytes:(_data.bytes + _offset) length:possibleLength];
     _offset += possibleLength;
 
     return result;
@@ -32,6 +41,11 @@
 - (void)seekToDataOffset:(NSInteger)offset
 {
     _offset = offset;
+}
+
+- (NSUInteger)length
+{
+    return _data.length;
 }
 
 @end

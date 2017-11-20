@@ -8,9 +8,14 @@
 
 #import <Foundation/Foundation.h>
 
-@interface WRReadableData : NSMutableData
+@interface WRReadableData : NSObject
 
-- (WRReadableData *)readDataOfLength:(NSUInteger)length;
+@property (nonatomic, assign, readonly) NSUInteger length;
+@property (nonatomic, copy, readonly) NSData *data;
+
+- (instancetype)initWithData:(NSData *)data;
+
+- (NSData *)readDataOfLength:(NSUInteger)length;
 - (void)seekToDataOffset:(NSInteger)offset;
 
 @end

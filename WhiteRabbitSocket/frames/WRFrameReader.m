@@ -28,7 +28,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 
 - (BOOL)readData:(NSData *)data error:(NSError *__autoreleasing *)error
 {
-    return [self read:[WRReadableData dataWithData:data] error:error];
+    return [self read:[[WRReadableData alloc] initWithData:data] error:error];
 }
 
 - (BOOL)read:(WRReadableData *)data error:(NSError *__autoreleasing *)error
@@ -62,7 +62,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
         }
         case WRFrameReaderStateExtended: {
             if(_payload.extraLengthBuffer.length + data.length < _payload.extraLengthCapacity) {
-                [_payload.extraLengthBuffer appendData:data];
+                [_payload.extraLengthBuffer appendData:data.data];
                 return YES;
             }
             
