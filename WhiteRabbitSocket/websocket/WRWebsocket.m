@@ -22,6 +22,7 @@ static uint8_t const kWRWebsocketProtocolVersion = 13;
 static NSInteger const kWRWebsocketChunkLength = 4096;
 
 @interface WRWebsocket ()<NSURLSessionDelegate>
+@property (nonatomic, assign) WRWebsocketState state;
 @end
 
 @implementation WRWebsocket {
@@ -44,15 +45,26 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         _initialRequest = request.copy;
         _securePolicy = serverTrustPolicy;
 
+        _state = WRWebsocketStateClosed;
+
         //TODO: setup configuration settings
         NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
         configuration.timeoutIntervalForRequest = request.timeoutInterval;
         configuration.requestCachePolicy = request.cachePolicy;
         configuration.TLSMinimumSupportedProtocol = _securePolicy.minTLSSupportedProtocol;
         configuration.TLSMaximumSupportedProtocol = _securePolicy.maxTLSSupportedProtocol;
+
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
+
+        _frameReader = [WRFrameReader new];
+        _frameReader.onTextFrameFinish = ^(NSString *text) {
+            NSLog(@"Resilt: %@", text);
+        };
+        _frameReader.onDataFrameFinish = ^(NSData *data) {
+            NSLog(@"Resilt lenghitten: %@", data.length);
+        };
     }
     return self;
 }
@@ -61,42 +73,25 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (void)open
 {
-    //TODO: connection via proxy
-    
-//    [_streamTask startSecureConnection];
+    if (_state != WRWebsocketStateClosed) return;
+
+    self.state = WRWebsocketStateConnecting;
+
+    //TODO: [_streamTask startSecureConnection];
     [_streamTask resume];
 
-    NSMutableData *data = [NSMutableData dataWithLength:16];
-    int result = SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
-    if (result != 0) {
-        [NSException raise:NSInternalInconsistencyException format:@"Failed to generate random bytes with OSStatus: %d", result];
-    }
-    NSString *securityKeyString = [data base64EncodedStringWithOptions:0];
-    
-    NSData *handshakeData = [WRHandshakeHandler buildHandshakeDataWithRequest:_initialRequest securityKey:securityKeyString cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:nil];
-
-    //TODO: writeData is proceed synchroniously, should we do smth with it?
     __weak typeof(self) wself = self;
-    [_streamTask writeData:handshakeData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
-        if (error != nil) {
-            //TODO: move to callback queue
-            [wself.delegate websocket:wself didFailWithError:error];
+    [self openingHandshakeWithCompletion:^(BOOL success, NSError *error) {
+        __strong typeof(wself) sself = wself;
+        if (sself == nil) return;
+
+        if (success) {
+            sself.state = WRWebsocketStateConnected;
+            [sself.delegate websocketDidEstablishConnection:sself];
+
+            [sself readData];
         } else {
-            //TODO: state is ready, I guess
-        }
-    }];
-    
-    [_streamTask readDataOfMinLength:1 maxLength:kWRWebsocketChunkLength timeout:_initialRequest.timeoutInterval completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
-        if (error != nil) {
-            //TODO: move to callback queue
-            [wself.delegate websocket:wself didFailWithError:error];
-        } else {
-            CFHTTPMessageRef handshakeResponse = CFHTTPMessageCreateEmpty(NULL, NO);
-            CFHTTPMessageAppendBytes(handshakeResponse, (const UInt8 *)data.bytes, data.length);
-            BOOL isConnectionEstablished = [WRHandshakeHandler parseHandshakeResponse:handshakeResponse securityKey:securityKeyString websocketProtocols:nil error:nil];
-            if (isConnectionEstablished) {
-                [wself.delegate websocketDidEstablishConnection:wself];
-            }
+            [sself onFailWithError:error];
         }
     }];
 }
@@ -106,67 +101,105 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     
 }
 
-- (BOOL)sendData:(NSData *)data error:(NSError **)error
+- (BOOL)sendData:(NSData *)data error:(NSError **)outError
 {
-    return NO;
+    return [self writeData:data opcode:WROpCodeBinaryFrame error:outError];
 }
 
 - (BOOL)sendMessage:(NSString *)message error:(NSError **)outError
 {
-    __weak typeof(self) wself = self;
-    NSData *strData = [message dataUsingEncoding:NSUTF8StringEncoding];
-    NSData *data = [WRFrameWriter buildFrameFromData:strData opCode:WROpCodeTextFrame error:outError];
-
-    if (data == nil) {
-        return NO;
-    }
-
-    [_streamTask writeData:data timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
-        if (error != nil) {
-            //TODO: move to callback queue
-            [wself.delegate websocket:wself didFailWithError:error];
-        } else {
-            NSLog(@"OK");
-        }
-    }];
-
-    _frameReader = [WRFrameReader new];
-    _frameReader.onTextFrameFinish = ^(NSString *text) {
-        NSLog(@"Resilt: %@", text);
-    };
-
-    [self readSocketData];
-
-    return YES;
+    NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
+    return [self writeData:data opcode:WROpCodeTextFrame error:outError];
 }
 
-- (BOOL)sendPing:(NSData *)data error:(NSError **)error
+- (BOOL)sendPing:(NSData *)data error:(NSError **)outError
 {
-    return NO;
+    return [self writeData:data opcode:WROpCodePing error:outError];
 }
 
 #pragma mark - Private Methods
 
-- (void)readSocketData
+- (void)openingHandshakeWithCompletion:(void(^)(BOOL success, NSError *error))completion
+{
+    NSError *outError;
+    WRHandshakeHandler *handshakeHandler = [WRHandshakeHandler new];
+    NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
+
+    if (handshakeData == nil) {
+        completion(NO, outError);
+        return;
+    }
+
+    [_streamTask writeData:handshakeData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
+        if (error != nil) {
+            completion(NO, error);
+        } else {
+            NSLog(@"Writing is done!");
+        }
+    }];
+
+    __weak typeof(self) wself = self;
+    [_streamTask readDataOfMinLength:1 maxLength:kWRWebsocketChunkLength timeout:_initialRequest.timeoutInterval completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
+        __strong typeof(wself) sself = wself;
+        if (sself == nil) return;
+
+        if (error != nil) {
+            completion(NO, error);
+        }
+        else {
+            NSError *parseError;
+            BOOL isConnectionEstablished = [handshakeHandler parseHandshakeResponse:data websocketProtocols:nil error:&parseError];
+            completion(isConnectionEstablished, parseError);
+        }
+    }];
+}
+
+- (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError
+{
+    NSData *frameData = [WRFrameWriter buildFrameFromData:data opCode:opcode error:outError];
+
+    if (frameData == nil) {
+        return NO;
+    }
+
+    __weak typeof(self) wself = self;
+    [_streamTask writeData:frameData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
+        if (error != nil) {
+            [wself onFailWithError:error];
+        } else {
+            NSLog(@"Writing is done!");
+        }
+    }];
+
+    return YES;
+}
+
+- (void)readData
 {
     __weak typeof(self) wself = self;
     [_streamTask readDataOfMinLength:2 maxLength:kWRWebsocketChunkLength timeout:0 completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
+        __strong typeof(wself) sself = wself;
+        if (sself == nil) return;
+
         if (error != nil) {
-            [wself.delegate websocket:wself didFailWithError:error];
+            [sself onFailWithError:error];
         }
         else {
-            NSLog(@"Start reading");
             NSError *readerError;
-            BOOL result = [_frameReader readData:data error:&readerError];
+            BOOL result = [sself->_frameReader readData:data error:&readerError];
             if (!result) {
-                [wself.delegate websocket:wself didFailWithError:readerError];
+                [sself.delegate websocket:sself didFailWithError:readerError];
             }
 
-            NSLog(@"Finish reading");
-
-            [wself readSocketData];
+            [sself readData];
         }
     }];
+}
+
+- (void)onFailWithError:(NSError *)error
+{
+    self.state = WRWebsocketStateClosed;
+    [self.delegate websocket:self didFailWithError:error];
 }
 
 @end

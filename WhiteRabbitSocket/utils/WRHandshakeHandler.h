@@ -10,15 +10,13 @@
 
 @interface WRHandshakeHandler : NSObject
 
-+ (NSData *)buildHandshakeDataWithRequest:(NSURLRequest *)request
-                              securityKey:(NSString *)securityKey
+- (NSData *)buildHandshakeDataWithRequest:(NSURLRequest *)request
                                   cookies:(NSArray<NSHTTPCookie *> *)cookies
                        websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                           protocolVersion:(uint8_t)protocolVersion
                                     error:(NSError **)error;
 
-+ (BOOL)parseHandshakeResponse:(CFHTTPMessageRef)response
-                   securityKey:(NSString *)securityKey
+- (BOOL)parseHandshakeResponse:(NSData *)response
             websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                          error:(NSError **)error;
 

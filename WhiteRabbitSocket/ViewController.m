@@ -26,7 +26,7 @@
     [bbutton addTarget:self action:@selector(onBButonTap) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:bbutton];
 
-    NSURL *handshakeTestUrl = [NSURL URLWithString:@"ws://echo.websocket.org"];
+    NSURL *handshakeTestUrl = [NSURL URLWithString:@"ws://demos.kaazing.com/echo"];
     NSURLRequest *handshakeRequest = [NSURLRequest requestWithURL:handshakeTestUrl];
     
     _webSocket = [[WRWebsocket alloc] initWithURLRequest:handshakeRequest];
@@ -36,6 +36,7 @@
 
 - (void)onBButonTap
 {
+
     NSError *error;
     NSString *path = [[NSBundle mainBundle] pathForResource:@"Message" ofType:@"txt"];
     NSString *text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];

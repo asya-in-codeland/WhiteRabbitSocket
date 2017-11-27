@@ -13,10 +13,25 @@
 
 static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-@implementation WRHandshakeHandler
+@implementation WRHandshakeHandler {
+    NSString *_securityKey;
+}
 
-+ (NSData *)buildHandshakeDataWithRequest:(NSURLRequest *)request
-                              securityKey:(NSString *)securityKey
+- (instancetype)init
+{
+    self = [super init];
+    if (self != nil) {
+        NSMutableData *data = [NSMutableData dataWithLength:16];
+        int result = SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
+        if (result != 0) {
+            [NSException raise:NSInternalInconsistencyException format:@"Failed to generate random bytes with OSStatus: %d", result];
+        }
+        _securityKey = [data base64EncodedStringWithOptions:0];
+    }
+    return self;
+}
+
+- (NSData *)buildHandshakeDataWithRequest:(NSURLRequest *)request
                                   cookies:(NSArray<NSHTTPCookie *> *)cookies
                        websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                           protocolVersion:(uint8_t)protocolVersion
@@ -51,7 +66,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Upgrade"), CFSTR("websocket"));
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Connection"), CFSTR("Upgrade"));
-    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Key"), (__bridge CFStringRef)securityKey);
+    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Key"), (__bridge CFStringRef)_securityKey);
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Version"), (__bridge CFStringRef)[NSString stringWithFormat:@"%d", protocolVersion]);
     
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Origin"), (__bridge CFStringRef)url.origin);
@@ -71,12 +86,19 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     return messageData;
 }
 
-+ (BOOL)parseHandshakeResponse:(CFHTTPMessageRef)response
-                   securityKey:(NSString *)securityKey
+- (BOOL)parseHandshakeResponse:(NSData *)data
             websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                          error:(NSError *__autoreleasing *)error
 {
     //TODO: error may be nil, unexpectedly ><
+
+    if (data == nil) {
+        *error = [NSError errorWithCode:1334 description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)12334]];
+        return NO;
+    }
+
+    CFHTTPMessageRef response = CFHTTPMessageCreateEmpty(NULL, NO);
+    CFHTTPMessageAppendBytes(response, (const UInt8 *)data.bytes, data.length);
 
     NSLog(@"Response Headers: %@", ((__bridge NSDictionary*)CFHTTPMessageCopyAllHeaderFields(response)));
 
@@ -99,7 +121,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     }
 
     NSString *acceptHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Accept")));
-    NSString *concattedString = [securityKey stringByAppendingString:WRWebSocketAppendToSecKeyString];
+    NSString *concattedString = [_securityKey stringByAppendingString:WRWebSocketAppendToSecKeyString];
     NSString *expectedAccept =  [[concattedString SHA1] base64EncodedStringWithOptions:0];;
     if(acceptHeader == nil || ![acceptHeader isEqualToString:expectedAccept]) {
         *error = [NSError errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."];
