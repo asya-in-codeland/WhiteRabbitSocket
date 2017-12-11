@@ -10,9 +10,9 @@
 
 typedef NS_ENUM(NSInteger, WROpCode)
 {
-    WROpCodeTextFrame = 0x1,
-    WROpCodeBinaryFrame = 0x2,
-    WROpCodeConnectionClose = 0x8,
+    WROpCodeText = 0x1,
+    WROpCodeBinary = 0x2,
+    WROpCodeClose = 0x8,
     WROpCodePing = 0x9,
     WROpCodePong = 0xA
 };

@@ -9,10 +9,14 @@
 #import <Foundation/Foundation.h>
 
 @protocol WRWebsocketDelegate <NSObject>
-
-- (void)websocketDidEstablishConnection:(nonnull WRWebsocket *)websocket;
+@required
 - (void)websocket:(nonnull WRWebsocket *)websocket didReceiveData:(nonnull NSData *)data;
 - (void)websocket:(nonnull WRWebsocket *)websocket didReceiveMessage:(nonnull NSString *)message;
 - (void)websocket:(nonnull WRWebsocket *)websocket didFailWithError:(nonnull NSError *)error;
 
+@optional
+- (void)websocketDidEstablishConnection:(nonnull WRWebsocket *)websocket;
+- (void)websocket:(nonnull WRWebsocket *)webSocket didReceivePing:(nullable NSData *)data;
+- (void)webSocket:(nonnull WRWebsocket *)webSocket didReceivePong:(nullable NSData *)data;
+- (void)webSocket:(nonnull WRWebsocket *)webSocket didCloseWithData:(nullable NSData *)data;
 @end

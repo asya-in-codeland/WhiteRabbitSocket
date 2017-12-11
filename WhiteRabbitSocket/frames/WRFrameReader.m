@@ -37,6 +37,8 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 
 - (BOOL)readData:(NSData *)data error:(NSError *__autoreleasing *)error
 {
+    //TODO: handle async
+    NSLog(@"Start reading data...");
     return [self read:[[WRReadableData alloc] initWithData:data] error:error];
 }
 
@@ -44,6 +46,8 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 
 - (BOOL)read:(WRReadableData *)data error:(NSError *__autoreleasing *)error
 {
+    NSLog(@"data length: %lu", (unsigned long)data.length);
+
     if (data.length == 0) {
         return YES;
     }
@@ -65,6 +69,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             
             if (_currentFrame.payloadLength == 0) {
                 _state = WRFrameReaderStateHeader;
+                [self completeFrameProcessingIfNeeded];
             }
             else if (_currentFrame.payloadLength < 126) {
                 _state = WRFrameReaderStatePayload;
@@ -89,10 +94,10 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             if (_currentFrame.payloadLength == 126) {
                 uint16_t payloadLength = 0;
                 memcpy(&payloadLength, _currentFrame.extraLengthBuffer.bytes, sizeof(uint16_t));
-                _currentFrame.payloadCapacity = CFSwapInt16BigToHost(payloadLength);
+                _currentFrame.payloadCapacity = (NSUInteger)CFSwapInt16BigToHost(payloadLength);
             }
             else if(_currentFrame.payloadLength == 127) {
-                _currentFrame.payloadCapacity = CFSwapInt64BigToHost(*(uint64_t *)_currentFrame.extraLengthBuffer.bytes);
+                _currentFrame.payloadCapacity = (NSUInteger)CFSwapInt64BigToHost(*(uint64_t *)_currentFrame.extraLengthBuffer.bytes);
             }
             
             _state = WRFrameReaderStatePayload;
@@ -110,12 +115,8 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             _framesCount++;
             [_message appendData:_currentFrame.payload];
 
-            if (_currentFrame.fin) {
-                [self performCompletionHandler];
-                _message = [NSMutableData new];
-            }
+            [self completeFrameProcessingIfNeeded];
 
-            _currentFrame = [WRFrame new];
             _state = WRFrameReaderStateHeader;
             return [self read:data error:error];
         }
@@ -134,8 +135,8 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     }
     
     uint8_t receivedOpcode = (WROpCodeMask & headerBuffer[0]);
-    
-    BOOL isControlFrame = (receivedOpcode == WROpCodePing || receivedOpcode == WROpCodePong || receivedOpcode == WROpCodeConnectionClose);
+
+    BOOL isControlFrame = (receivedOpcode == WROpCodePing || receivedOpcode == WROpCodePong || receivedOpcode == WROpCodeClose);
     
     if (!isControlFrame && receivedOpcode != 0 && _framesCount > 0) {
         *error = [NSError errorWithCode:2133 description: @"All data frames after the initial data frame must have opcode 0."];
@@ -162,13 +163,34 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     return YES;
 }
 
-- (void)performCompletionHandler
+- (void)completeFrameProcessingIfNeeded
 {
-    if (_currentFrame.opcode == WROpCodeTextFrame && _onTextFrameFinish != nil) {
-        _onTextFrameFinish([[NSString alloc] initWithData:_message encoding:NSUTF8StringEncoding]);
+    if (_currentFrame.fin) {
+        [self notifyDelegate];
+        _message = [NSMutableData new];
     }
-    else if (_currentFrame.opcode == WROpCodeBinaryFrame && _onDataFrameFinish != nil) {
-        _onDataFrameFinish(_message);
+
+    _currentFrame = [WRFrame new];
+}
+
+- (void)notifyDelegate
+{
+    switch (_currentFrame.opcode) {
+        case WROpCodeText:
+            [_delegate frameReader:self didProcessText:[[NSString alloc] initWithData:_message encoding:NSUTF8StringEncoding]];
+            break;
+        case WROpCodeBinary:
+            [_delegate frameReader:self didProcessData:_message];
+            break;
+        case WROpCodeClose:
+            [_delegate frameReader:self didProcessClose:_message];
+            break;
+        case WROpCodePing:
+            [_delegate frameReader:self didProcessPing:_message];
+            break;
+        case WROpCodePong:
+            [_delegate frameReader:self didProcessPong:_message];
+            break;
     }
 }
 

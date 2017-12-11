@@ -8,11 +8,20 @@
 
 #import <Foundation/Foundation.h>
 
+@protocol WRFrameReaderDelegate;
+
 @interface WRFrameReader : NSObject
 
-@property (nonatomic, strong) void(^onDataFrameFinish)(NSData *data);
-@property (nonatomic, strong) void(^onTextFrameFinish)(NSString *text);
+@property (nonatomic, weak) id<WRFrameReaderDelegate> delegate;
 
 - (BOOL)readData:(NSData *)data error:(NSError **)error;
 
+@end
+
+@protocol WRFrameReaderDelegate<NSObject>
+- (void)frameReader:(WRFrameReader *)reader didProcessText:(NSString *)text;
+- (void)frameReader:(WRFrameReader *)reader didProcessData:(NSData *)data;
+- (void)frameReader:(WRFrameReader *)reader didProcessPing:(NSData *)data;
+- (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data;
+- (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data;
 @end

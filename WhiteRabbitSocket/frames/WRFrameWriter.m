@@ -17,11 +17,6 @@ static const NSInteger WRFrameHeaderOverhead = 32;
 
 + (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error
 {
-    if (data == nil) {
-        //TODO: add error
-        return nil;
-    }
-    
     size_t payloadLength = data.length;
     
     NSMutableData *frameData = [[NSMutableData alloc] initWithLength:payloadLength + WRFrameHeaderOverhead];

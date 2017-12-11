@@ -21,7 +21,7 @@ NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 static uint8_t const kWRWebsocketProtocolVersion = 13;
 static NSInteger const kWRWebsocketChunkLength = 4096;
 
-@interface WRWebsocket ()<NSURLSessionDelegate>
+@interface WRWebsocket ()<NSURLSessionDelegate, WRFrameReaderDelegate>
 @property (nonatomic, assign) WRWebsocketState state;
 @end
 
@@ -59,12 +59,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
 
         _frameReader = [WRFrameReader new];
-        _frameReader.onTextFrameFinish = ^(NSString *text) {
-            NSLog(@"Resilt: %@", text);
-        };
-        _frameReader.onDataFrameFinish = ^(NSData *data) {
-            NSLog(@"Resilt lenghitten: %@", data.length);
-        };
+        _frameReader.delegate = self;
     }
     return self;
 }
@@ -98,18 +93,26 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (void)close
 {
-    
+    if (_state != WRWebsocketStateConnected) { return; }
+
+    self.state = WRWebsocketStateClosing;
+
+    NSError *error;
+    BOOL result = [self writeData:nil opcode:WROpCodeClose error:&error];
+    if (!result) {
+        [self onFailWithError:error];
+    }
 }
 
 - (BOOL)sendData:(NSData *)data error:(NSError **)outError
 {
-    return [self writeData:data opcode:WROpCodeBinaryFrame error:outError];
+    return [self writeData:data opcode:WROpCodeBinary error:outError];
 }
 
 - (BOOL)sendMessage:(NSString *)message error:(NSError **)outError
 {
     NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
-    return [self writeData:data opcode:WROpCodeTextFrame error:outError];
+    return [self writeData:data opcode:WROpCodeText error:outError];
 }
 
 - (BOOL)sendPing:(NSData *)data error:(NSError **)outError
@@ -156,6 +159,11 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError
 {
+    if (_state != WRWebsocketStateConnected) {
+        *outError = [NSError errorWithCode:1234 description:@"Unable to write data, connection is closed."];
+        return NO;
+    }
+
     NSData *frameData = [WRFrameWriter buildFrameFromData:data opCode:opcode error:outError];
 
     if (frameData == nil) {
@@ -185,21 +193,79 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
             [sself onFailWithError:error];
         }
         else {
-            NSError *readerError;
-            BOOL result = [sself->_frameReader readData:data error:&readerError];
-            if (!result) {
-                [sself.delegate websocket:sself didFailWithError:readerError];
+            if (atEOF) {
+                [sself closeConnection];
             }
+            else {
+                NSError *readerError;
+                BOOL result = [sself->_frameReader readData:data error:&readerError];
+                if (!result) {
+                    [sself.delegate websocket:sself didFailWithError:readerError];
+                }
 
-            [sself readData];
+                [sself readData];
+            }
         }
     }];
 }
 
 - (void)onFailWithError:(NSError *)error
 {
-    self.state = WRWebsocketStateClosed;
+    [self closeConnection];
     [self.delegate websocket:self didFailWithError:error];
+}
+
+- (void)closeConnection
+{
+    [_streamTask closeRead];
+    [_streamTask closeWrite];
+    self.state = WRWebsocketStateClosed;
+}
+
+#pragma mark - NSURLSessionTaskDelegate
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didCompleteWithError:(nullable NSError *)error
+{
+    //TODO: add implementation
+}
+
+#pragma mark - WRFrameReaderDelegate
+
+- (void)frameReader:(WRFrameReader *)reader didProcessText:(NSString *)text
+{
+    NSLog(@"Resilt: %@", text);
+}
+
+- (void)frameReader:(WRFrameReader *)reader didProcessData:(NSData *)data
+{
+    NSLog(@"Resilt der lenghitten: %lu", (unsigned long)data.length);
+}
+
+- (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data
+{
+    if (_state == WRWebsocketStateClosing) {
+        [self closeConnection];
+        [_delegate webSocket:self didCloseWithData:data];
+    }
+
+    //TODO: what about WRWebsocketStateConnecting state ><
+    if (_state == WRWebsocketStateConnected) {
+        [self close];
+    }
+}
+
+- (void)frameReader:(WRFrameReader *)reader didProcessPing:(NSData *)data
+{
+    NSLog(@"Die ping");
+    [_delegate websocket:self didReceivePing:data];
+    [self writeData:nil opcode:WROpCodePong error:nil];
+}
+
+- (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data
+{
+    NSLog(@"Der pong");
+    [_delegate webSocket:self didReceivePong:data];
 }
 
 @end

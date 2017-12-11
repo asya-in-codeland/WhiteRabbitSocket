@@ -36,18 +36,20 @@
 
 - (void)onBButonTap
 {
+//
+//    NSError *error;
+//    NSString *path = [[NSBundle mainBundle] pathForResource:@"Message" ofType:@"txt"];
+//    NSString *text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+//
+//    NSLog(@"send message length: %lu", text.length);
+//
+//    BOOL result = [_webSocket sendMessage:text error:&error];
+//
+//    if (!result) {
+//        NSLog(@"error: %@", error.localizedDescription);
+//    }
 
-    NSError *error;
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"Message" ofType:@"txt"];
-    NSString *text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
-
-    NSLog(@"send message length: %lu", text.length);
-
-    BOOL result = [_webSocket sendMessage:text error:&error];
-
-    if (!result) {
-        NSLog(@"error: %@", error.localizedDescription);
-    }
+    [_webSocket sendPing:nil error:nil];
 }
 
 
