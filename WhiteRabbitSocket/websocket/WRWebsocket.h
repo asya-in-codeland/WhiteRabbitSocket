@@ -24,6 +24,7 @@ typedef NS_ENUM(NSInteger, WRWebsocketState) {
 
 @property (nonatomic, weak, nullable) id<WRWebsocketDelegate> delegate;
 @property (nonatomic, assign, readonly) WRWebsocketState state;
+@property (nonatomic, assign) BOOL enabledPerMessageDeflate;
 
 - (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request;
 - (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request securePolicy:(nonnull WRServerTrustPolicy *)serverTrustPolicy NS_DESIGNATED_INITIALIZER;

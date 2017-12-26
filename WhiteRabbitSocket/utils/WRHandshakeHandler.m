@@ -15,9 +15,12 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
 
 @implementation WRHandshakeHandler {
     NSString *_securityKey;
+    NSArray<NSString *> *_websocketProtocols;
+    BOOL _enabledPerMessageDeflate;
 }
 
-- (instancetype)init
+- (instancetype)initWebsocketProtocols:(NSArray<NSString *> *)websocketProtocols
+              enabledPerMessageDeflate:(BOOL)enabledPerMessageDeflate
 {
     self = [super init];
     if (self != nil) {
@@ -33,7 +36,6 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
 
 - (NSData *)buildHandshakeDataWithRequest:(NSURLRequest *)request
                                   cookies:(NSArray<NSHTTPCookie *> *)cookies
-                       websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                           protocolVersion:(uint8_t)protocolVersion
                                     error:(NSError *__autoreleasing *)error
 {
@@ -71,9 +73,13 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Origin"), (__bridge CFStringRef)url.origin);
     
-    if (websocketProtocols.count > 0) {
+    if (_websocketProtocols.count > 0) {
         CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Protocol"),
-                                         (__bridge CFStringRef)[websocketProtocols componentsJoinedByString:@", "]);
+                                         (__bridge CFStringRef)[_websocketProtocols componentsJoinedByString:@", "]);
+    }
+    
+    if (_enabledPerMessageDeflate) {
+        CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Extensions"), (__bridge CFStringRef)@"permessage-deflate");
     }
     
     [request.allHTTPHeaderFields enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
@@ -86,9 +92,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     return messageData;
 }
 
-- (BOOL)parseHandshakeResponse:(NSData *)data
-            websocketProtocols:(NSArray<NSString *> *)websocketProtocols
-                         error:(NSError *__autoreleasing *)error
+- (BOOL)parseHandshakeResponse:(NSData *)data error:(NSError *__autoreleasing *)error
 {
     //TODO: error may be nil, unexpectedly ><
 
@@ -130,12 +134,22 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     
     NSString *negotiatedProtocol = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Protocol")));
     if (negotiatedProtocol != nil) {
-        if ([websocketProtocols indexOfObject:negotiatedProtocol] == NSNotFound) {
+        if ([_websocketProtocols indexOfObject:negotiatedProtocol] == NSNotFound) {
             *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Protocol that wasn't requested."];
             return NO;
         }
     }
 
+    NSString *perMessageDeflateHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Extensions")));
+    //TODO: parse extention parameters
+    //Sec-WebSocket-Extensions:
+    //permessage-deflate;
+    //client_max_window_bits; server_max_window_bits=10
+    if (_enabledPerMessageDeflate && ![perMessageDeflateHeader containsString:@"permessage-deflate"]) {
+        *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
+        return NO;
+    }
+    
     return YES;
 }
 

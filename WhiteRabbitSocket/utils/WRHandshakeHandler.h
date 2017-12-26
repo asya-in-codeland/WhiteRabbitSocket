@@ -10,14 +10,14 @@
 
 @interface WRHandshakeHandler : NSObject
 
+- (instancetype)initWithWebsocketProtocols:(NSArray<NSString *> *)websocketProtocols
+                  enabledPerMessageDeflate:(BOOL)enabledPerMessageDeflate;
+
 - (NSData *)buildHandshakeDataWithRequest:(NSURLRequest *)request
                                   cookies:(NSArray<NSHTTPCookie *> *)cookies
-                       websocketProtocols:(NSArray<NSString *> *)websocketProtocols
                           protocolVersion:(uint8_t)protocolVersion
                                     error:(NSError **)error;
 
-- (BOOL)parseHandshakeResponse:(NSData *)response
-            websocketProtocols:(NSArray<NSString *> *)websocketProtocols
-                         error:(NSError **)error;
+- (BOOL)parseHandshakeResponse:(NSData *)response error:(NSError **)error;
 
 @end

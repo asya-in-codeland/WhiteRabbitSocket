@@ -21,13 +21,13 @@
 
 - (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel
 {
+    NSAssert(windowBits >= -15 && windowBits <= -1, @"windowBits must be between -15 and -1");
+    NSAssert(memoryLevel >= 1 && memoryLevel <= 9, @"memory level must be between 1 and 9");
+    
     self = [super init];
     if(self != nil) {
         _windowBits = windowBits;
         _memoryLevel = memoryLevel;
-        
-        NSAssert(_windowBits >= -15 && _windowBits <= -1, @"windowBits must be between -15 and -1");
-        NSAssert(_memoryLevel >= 1 && _memoryLevel <= 9, @"memory level must be between 1 and 9");
         
         bzero(&_stream, sizeof(_stream));
         bzero(_chunkBuffer, sizeof(_chunkBuffer));

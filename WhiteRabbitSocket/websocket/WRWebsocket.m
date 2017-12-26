@@ -125,8 +125,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 - (void)openingHandshakeWithCompletion:(void(^)(BOOL success, NSError *error))completion
 {
     NSError *outError;
-    WRHandshakeHandler *handshakeHandler = [WRHandshakeHandler new];
-    NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil websocketProtocols:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
+    WRHandshakeHandler *handshakeHandler = [[WRHandshakeHandler alloc] initWithWebsocketProtocols:nil enabledPerMessageDeflate:_enabledPerMessageDeflate];
+    NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
 
     if (handshakeData == nil) {
         completion(NO, outError);
@@ -151,7 +151,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         }
         else {
             NSError *parseError;
-            BOOL isConnectionEstablished = [handshakeHandler parseHandshakeResponse:data websocketProtocols:nil error:&parseError];
+            BOOL isConnectionEstablished = [handshakeHandler parseHandshakeResponse:data error:&parseError];
             completion(isConnectionEstablished, parseError);
         }
     }];
