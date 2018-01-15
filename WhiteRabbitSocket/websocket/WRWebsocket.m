@@ -222,6 +222,21 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     self.state = WRWebsocketStateClosed;
 }
 
+#pragma mark - NSURLSessionDelegate
+
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
+
+    SecTrustRef serverTrust = challenge.protectionSpace.serverTrust;
+    NSString *domain = challenge.protectionSpace.host;
+
+    if ([_securePolicy evaluateServerTrust:serverTrust domain:domain]) {
+        NSURLCredential *credential = [NSURLCredential credentialForTrust:serverTrust];
+        completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+    } else {
+        completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, NULL);
+    }
+}
+
 #pragma mark - NSURLSessionTaskDelegate
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task

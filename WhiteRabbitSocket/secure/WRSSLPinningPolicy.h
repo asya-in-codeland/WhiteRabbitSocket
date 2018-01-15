@@ -10,6 +10,6 @@
 
 @interface WRSSLPinningPolicy : WRServerTrustPolicy
 
-- (instancetype)initWithCertificates:(NSArray *)pinnedCertificates;
+- (instancetype)initWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates;
 
 @end

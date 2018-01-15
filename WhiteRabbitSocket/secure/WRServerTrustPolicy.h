@@ -14,10 +14,10 @@
 @property (nonatomic, assign, readonly) SSLProtocol minTLSSupportedProtocol;
 
 + (instancetype)defaultEvaluationPolicy;
-+ (instancetype)pinnningEvaluationPolicyWithCertificates:(NSArray *)pinnedCertificates;
++ (instancetype)pinnningEvaluationPolicyWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates;
 + (instancetype)customEvaluationPolicyWithHandler:(BOOL (^)(SecTrustRef serverTrust, NSString *domain))handler;
 
-- (instancetype)initWithCertificateChainValidationEnabled:(BOOL)enabled NS_DESIGNATED_INITIALIZER;
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain;
 

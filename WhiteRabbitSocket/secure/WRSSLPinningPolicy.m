@@ -10,11 +10,12 @@
 
 @implementation WRSSLPinningPolicy {
     NSArray *_pinnedCertificates;
+    BOOL _allowSelfSignedCertificates;
 }
 
-- (instancetype)initWithCertificates:(NSArray *)pinnedCertificates
+- (instancetype)initWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates
 {
-    self = [super initWithCertificateChainValidationEnabled:NO];
+    self = [super init];
     if (self != nil) {
         if (pinnedCertificates.count == 0) {
             @throw [NSException exceptionWithName:@"Creating security policy failed."
@@ -22,6 +23,7 @@
                                          userInfo:nil];
         }
         _pinnedCertificates = [pinnedCertificates copy];
+        _allowSelfSignedCertificates = allowSelfSignedCertificates;
     }
 
     return self;
@@ -29,24 +31,22 @@
 
 - (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain
 {
-    NSUInteger requiredCertCount = _pinnedCertificates.count;
-    
-    NSUInteger validatedCertCount = 0;
-    CFIndex serverCertCount = SecTrustGetCertificateCount(serverTrust);
-    for (CFIndex i = 0; i < serverCertCount; i++) {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(serverTrust, i);
-        NSData *data = CFBridgingRelease(SecCertificateCopyData(cert));
-        for (id ref in _pinnedCertificates) {
-            SecCertificateRef trustedCert = (__bridge SecCertificateRef)ref;
-            NSData *trustedCertData = CFBridgingRelease(SecCertificateCopyData(trustedCert));
-            if ([trustedCertData isEqualToData:data]) {
-                validatedCertCount++;
-                break;
-            }
+    if (!_allowSelfSignedCertificates && ![super evaluateServerTrust:serverTrust domain:domain]) {
+        return NO;
+    }
+
+    SecCertificateRef certificate = SecTrustGetCertificateAtIndex(serverTrust, 0);
+    NSData *remoteCertificateData = CFBridgingRelease(SecCertificateCopyData(certificate));
+
+    for (id pinnedCertificate in _pinnedCertificates) {
+        SecCertificateRef trustedCert = (__bridge SecCertificateRef)pinnedCertificate;
+        NSData *trustedCertData = CFBridgingRelease(SecCertificateCopyData(trustedCert));
+        if ([trustedCertData isEqualToData:remoteCertificateData]) {
+            return YES;
         }
     }
-    
-    return requiredCertCount == validatedCertCount;
+
+    return false;
 }
 
 @end

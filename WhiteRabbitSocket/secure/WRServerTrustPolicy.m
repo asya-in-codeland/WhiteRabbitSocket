@@ -19,31 +19,14 @@
     return [self new];
 }
 
-+ (instancetype)pinnningEvaluationPolicyWithCertificates:(NSArray *)pinnedCertificates
++ (instancetype)pinnningEvaluationPolicyWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates
 {
-    return [[WRSSLPinningPolicy alloc] initWithCertificates:pinnedCertificates];
+    return [[WRSSLPinningPolicy alloc] initWithCertificates:pinnedCertificates allowSelfSignedCertificates:allowSelfSignedCertificates];
 }
 
 + (instancetype)customEvaluationPolicyWithHandler:(BOOL (^)(SecTrustRef, NSString *))handler
 {
     return [[WRCustomPolicy alloc] initWithHandler:handler];
-}
-
-- (instancetype)initWithCertificateChainValidationEnabled:(BOOL)enabled
-{
-    self = [super init];
-    if (self != nil) {
-        //TODO: not sure we need it, dont know how to set SSL chain validation enabled to session
-        // May be config?
-        _certificateChainValidationEnabled = enabled;
-    }
-    
-    return self;
-}
-
-- (instancetype)init
-{
-    return [self initWithCertificateChainValidationEnabled:YES];
 }
 
 #pragma mark - Public
@@ -60,7 +43,13 @@
 
 - (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain
 {
-    return YES;
+    NSMutableArray *policies = [NSMutableArray array];
+    [policies addObject:(__bridge_transfer id)SecPolicyCreateSSL(true, (__bridge CFStringRef)domain)];
+    SecTrustSetPolicies(serverTrust, (__bridge CFArrayRef)policies);
+
+    SecTrustResultType result;
+    SecTrustEvaluate(serverTrust, &result);
+    return (result == kSecTrustResultUnspecified || result == kSecTrustResultProceed);
 }
 
 @end

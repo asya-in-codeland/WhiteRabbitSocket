@@ -14,7 +14,7 @@
 
 - (instancetype)initWithHandler:(BOOL (^)(SecTrustRef serverTrust, NSString *domain))handler
 {
-    self = [self initWithCertificateChainValidationEnabled:NO];
+    self = [self init];
     if (self != nil) {
         if (handler == nil) {
             @throw [NSException exceptionWithName:@"Creating security policy failed."
