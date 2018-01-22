@@ -10,15 +10,23 @@
 #import "NSError+WRError.h"
 #import "WRSIMDFunction.h"
 #import "WRFrameMasks.h"
+#import "WRDataDeflater.h"
 
 static const NSInteger WRFrameHeaderOverhead = 32;
 
 @implementation WRFrameWriter
 
-+ (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error
+- (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error
 {
-    size_t payloadLength = data.length;
-    
+    NSData *payloadData = data;
+    BOOL shouldCompressData = _deflater != nil && payloadData.length > 0 && (opCode == WROpCodeText || opCode == WROpCodeBinary);
+
+    if (shouldCompressData) {
+        payloadData = [self compressData:payloadData];
+    }
+
+    size_t payloadLength = payloadData.length;
+
     NSMutableData *frameData = [[NSMutableData alloc] initWithLength:payloadLength + WRFrameHeaderOverhead];
     if (frameData == nil) {
         *error = [NSError errorWithCode:2133 description: @"Message too big."];
@@ -27,6 +35,10 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     
     uint8_t *frameBuffer = (uint8_t *)frameData.mutableBytes;
     frameBuffer[0] = WRFinMask | opCode;
+    if (shouldCompressData) {
+        frameBuffer[0] |= WRRsv1Mask;
+    }
+
     frameBuffer[1] |= WRMaskMask;
     
     size_t frameBufferSize = 2;
@@ -53,7 +65,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
         frameBufferSize += declaredPayloadLengthSize;
     }
     
-    const uint8_t *unmaskedPayloadBuffer = (uint8_t *)data.bytes;
+    const uint8_t *unmaskedPayloadBuffer = (uint8_t *)payloadData.bytes;
     uint8_t *maskKey = frameBuffer + frameBufferSize;
     
     size_t randomBytesSize = sizeof(uint32_t);
@@ -77,4 +89,34 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     return frameData;
 }
 
+- (NSData *)compressData:(NSData *)data
+{
+    NSMutableData *deflated = [NSMutableData dataWithCapacity:data.length/4];
+
+    NSError *error = nil;
+    [_deflater deflateData:data error:&error];
+//    // begin deflater
+//    if(![_deflater begin:deflated error:&error]) {
+//        NSAssert(NO, error.localizedDescription);
+//        [self failWithError:error];
+//        [_deflater reset];
+//        return;
+//    }
+//
+//    // append bytes
+//    if(![_deflater appendBytes:[payload bytes] length:[payload length] error:&error]) {
+//        NSAssert(NO, error.localizedDescription);
+//        [self failWithError:error];
+//        [_deflater reset];
+//        return;
+//    }
+//
+//    // end deflater
+//    if(![_deflater end:&error]) {
+//        NSAssert(NO, error.localizedDescription);
+//        [self failWithError:error];
+//        [_deflater reset];
+//        return;
+//    }
+}
 @end

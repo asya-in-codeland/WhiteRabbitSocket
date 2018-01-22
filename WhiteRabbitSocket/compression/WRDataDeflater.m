@@ -17,17 +17,19 @@
     z_stream _stream;
     
     NSMutableData *_deflateBuffer;
+    BOOL _noContextTakeover;
 }
 
-- (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel
+- (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel noContextTakeover:(BOOL)noContextTakeover
 {
-    NSAssert(windowBits >= -15 && windowBits <= -1, @"windowBits must be between -15 and -1");
+    NSAssert(windowBits >= 1 && windowBits <= 15, @"windowBits must be between 1 and 15");
     NSAssert(memoryLevel >= 1 && memoryLevel <= 9, @"memory level must be between 1 and 9");
     
     self = [super init];
     if(self != nil) {
-        _windowBits = windowBits;
+        _windowBits = -windowBits;
         _memoryLevel = memoryLevel;
+        _noContextTakeover = noContextTakeover;
         
         bzero(&_stream, sizeof(_stream));
         bzero(_chunkBuffer, sizeof(_chunkBuffer));
@@ -42,13 +44,14 @@
 
 #pragma mark - Public
 
-- (BOOL)deflateBytes:(const void *)bytes length:(NSUInteger)length error:(NSError *__autoreleasing *)outError {
-    NSParameterAssert(length);
+- (BOOL)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError
+{
+    NSParameterAssert(data != nil);
     
     [self deflateBufferLazyInitializationWithError:outError];
     
-    _stream.avail_in = (uInt)length;
-    _stream.next_in = (Bytef *)bytes;
+    _stream.avail_in = (uInt)data.length;
+    _stream.next_in = (Bytef *)data.bytes;
     
     do {
         _stream.avail_out = (uInt)sizeof(_chunkBuffer);
@@ -65,24 +68,18 @@
     return YES;
 }
 
-- (void)reset
+- (void)completeDeflate
 {
-    if(_deflateBuffer != nil) {
-        _deflateBuffer = nil;
-        deflateEnd(&_stream);
-        bzero(&_stream, sizeof(_stream));
-        bzero(_chunkBuffer, sizeof(_chunkBuffer));
-    }
-}
-
-- (BOOL)completeDeflate:(NSError *__autoreleasing *)outError
-{
+    //надо ли делать вычитание, раз _deflateBuffer создаётся с пустым капасити
     if(_deflateBuffer.length > 4) {
         _deflateBuffer.length -= 4;
     } else {
         _deflateBuffer.length = 0;
     }
-    return YES;
+
+    if (_noContextTakeover) {
+        [self reset];
+    }
 }
 
 #pragma mark - Private
@@ -96,6 +93,16 @@
         }
         
         _deflateBuffer = [NSMutableData data];
+    }
+}
+
+- (void)reset
+{
+    if(_deflateBuffer != nil) {
+        _deflateBuffer = nil;
+        deflateEnd(&_stream);
+        bzero(&_stream, sizeof(_stream));
+        bzero(_chunkBuffer, sizeof(_chunkBuffer));
     }
 }
 

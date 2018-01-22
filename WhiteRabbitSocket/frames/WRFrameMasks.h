@@ -10,6 +10,6 @@
 
 static const uint8_t WRFinMask = 0x80;
 static const uint8_t WROpCodeMask = 0x0F;
-static const uint8_t WRRsvMask = 0x70;
+static const uint8_t WRRsv1Mask = 0x40;
 static const uint8_t WRMaskMask = 0x80;
 static const uint8_t WRPayloadLenMask = 0x7F;

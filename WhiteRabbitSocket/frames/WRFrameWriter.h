@@ -9,8 +9,12 @@
 #import <Foundation/Foundation.h>
 #import "WRFrame.h"
 
+@class WRDataDeflater;
+
 @interface WRFrameWriter : NSObject
 
-+ (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error;
+@property (nonatomic, strong) WRDataDeflater *deflater;
+
+- (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error;
 
 @end

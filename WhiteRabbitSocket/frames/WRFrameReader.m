@@ -129,7 +129,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     assert(data.length >= 2);
     
     //TODO: check rsv flags for deflate
-    if (headerBuffer[0] & WRRsvMask) {
+    if (headerBuffer[0] & WRRsv1Mask) {
         *error = [NSError errorWithCode:2133 description: @"Server used RSV bits."];
         return NO;
     }

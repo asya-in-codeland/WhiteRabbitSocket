@@ -8,11 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
+@class WRDataInflater;
 @protocol WRFrameReaderDelegate;
 
 @interface WRFrameReader : NSObject
 
 @property (nonatomic, weak) id<WRFrameReaderDelegate> delegate;
+@property (nonatomic, strong) WRDataInflater *inflater;
 
 - (BOOL)readData:(NSData *)data error:(NSError **)error;
 

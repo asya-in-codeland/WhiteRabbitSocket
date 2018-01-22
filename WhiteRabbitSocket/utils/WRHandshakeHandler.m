@@ -19,8 +19,8 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     BOOL _enabledPerMessageDeflate;
 }
 
-- (instancetype)initWebsocketProtocols:(NSArray<NSString *> *)websocketProtocols
-              enabledPerMessageDeflate:(BOOL)enabledPerMessageDeflate
+- (instancetype)initWithWebsocketProtocols:(NSArray<NSString *> *)websocketProtocols
+                  enabledPerMessageDeflate:(BOOL)enabledPerMessageDeflate
 {
     self = [super init];
     if (self != nil) {
@@ -30,6 +30,10 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
             [NSException raise:NSInternalInconsistencyException format:@"Failed to generate random bytes with OSStatus: %d", result];
         }
         _securityKey = [data base64EncodedStringWithOptions:0];
+        _enabledPerMessageDeflate = enabledPerMessageDeflate;
+
+        _noContextTakeover = NO;
+        _maxWindowBits = 15;
     }
     return self;
 }
@@ -79,7 +83,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     }
     
     if (_enabledPerMessageDeflate) {
-        CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Extensions"), (__bridge CFStringRef)@"permessage-deflate");
+        CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Extensions"), (__bridge CFStringRef)@"permessage-deflate; client_max_window_bits");
     }
     
     [request.allHTTPHeaderFields enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
@@ -140,16 +144,24 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
         }
     }
 
+    //TODO: header may contain multiple lines of "Sec-WebSocket-Extensions"
     NSString *perMessageDeflateHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Extensions")));
-    //TODO: parse extention parameters
-    //Sec-WebSocket-Extensions:
-    //permessage-deflate;
-    //client_max_window_bits; server_max_window_bits=10
+
     if (_enabledPerMessageDeflate && ![perMessageDeflateHeader containsString:@"permessage-deflate"]) {
         *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
         return NO;
     }
-    
+
+    NSArray *extensions = [perMessageDeflateHeader componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@",;"]];
+    for (NSString *extension in extensions) {
+        NSString *trimedExtension = [extension stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        if ([trimedExtension containsString:@"client_no_context_takeover"]) {
+            _noContextTakeover = YES;
+        } else if ([trimedExtension containsString:@"client_max_window_bits"]) {
+            _maxWindowBits = [[trimedExtension componentsSeparatedByString:@"="].lastObject integerValue];
+        }
+    }
+
     return YES;
 }
 

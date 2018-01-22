@@ -10,6 +10,9 @@
 
 @interface WRHandshakeHandler : NSObject
 
+@property (nonatomic, assign, readonly) NSUInteger maxWindowBits;
+@property (nonatomic, assign, readonly) BOOL noContextTakeover;
+
 - (instancetype)initWithWebsocketProtocols:(NSArray<NSString *> *)websocketProtocols
                   enabledPerMessageDeflate:(BOOL)enabledPerMessageDeflate;
 

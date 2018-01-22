@@ -10,11 +10,9 @@
 
 @interface WRDataDeflater : NSObject
 
-- (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel;
+- (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel noContextTakeover:(BOOL)noContextTakeover;
 
-- (BOOL)deflateBytes:(const void *)bytes length:(NSUInteger)length error:(NSError *__autoreleasing *)outError;
-- (BOOL)completeDeflate:(NSError *__autoreleasing *)outError;
-
-- (void)reset;
+- (BOOL)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError;
+- (NSData *)deflationResult; //stop here!!!!! должны вернуть _deflateBuffer
 
 @end
