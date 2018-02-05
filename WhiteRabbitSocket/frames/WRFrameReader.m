@@ -110,6 +110,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             }
             
             NSInteger appendedDataLength = _currentFrame.payloadCapacity - _currentFrame.payload.length;
+            //TODO: *сегодня мы узнали* нам могут приходить фреймы сжатый и нет в одном сообщении (см. флаг WRRsv1Mask), поэтому надо уметь класть в _message inflated и row payload, как сделали те чувачки.
             [_currentFrame.payload appendData:[data readDataOfLength:appendedDataLength]];
             
             _framesCount++;

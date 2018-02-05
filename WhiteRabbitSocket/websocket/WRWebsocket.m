@@ -10,14 +10,18 @@
 #import "WRWebsocketDelegate.h"
 #import "NSURL+WebSocket.h"
 #import "WRHandshakeHandler.h"
+#import "WRHandshakePreferences.h"
 #import "NSError+WRError.h"
 #import "WRServerTrustPolicy.h"
 #import "WRFrameWriter.h"
 #import "WRFrameReader.h"
 #import "WRReadableData.h"
+#import "WRDataDeflater.h"
+#import "WRDataInflater.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
+static uint8_t const kWRCompressionMemoryLevel = 8;
 static uint8_t const kWRWebsocketProtocolVersion = 13;
 static NSInteger const kWRWebsocketChunkLength = 4096;
 
@@ -31,6 +35,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSURLSessionStreamTask *_streamTask;
     WRServerTrustPolicy *_securePolicy;
     WRFrameReader *_frameReader;
+    WRFrameWriter *_frameWriter;
 }
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request
@@ -57,9 +62,6 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
-
-        _frameReader = [WRFrameReader new];
-        _frameReader.delegate = self;
     }
     return self;
 }
@@ -76,14 +78,15 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     [_streamTask resume];
 
     __weak typeof(self) wself = self;
-    [self openingHandshakeWithCompletion:^(BOOL success, NSError *error) {
+    [self openingHandshakeWithCompletion:^(WRHandshakePreferences *preferences, NSError *error) {
         __strong typeof(wself) sself = wself;
         if (sself == nil) return;
 
-        if (success) {
+        if (preferences != nil) {
             sself.state = WRWebsocketStateConnected;
             [sself.delegate websocketDidEstablishConnection:sself];
 
+            [sself setupFrameHandlersWithPreferences:preferences];
             [sself readData];
         } else {
             [sself onFailWithError:error];
@@ -122,20 +125,20 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 #pragma mark - Private Methods
 
-- (void)openingHandshakeWithCompletion:(void(^)(BOOL success, NSError *error))completion
+- (void)openingHandshakeWithCompletion:(void(^)(WRHandshakePreferences *, NSError *))completion
 {
     NSError *outError;
     WRHandshakeHandler *handshakeHandler = [[WRHandshakeHandler alloc] initWithWebsocketProtocols:nil enabledPerMessageDeflate:_enabledPerMessageDeflate];
     NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
 
     if (handshakeData == nil) {
-        completion(NO, outError);
+        completion(nil, outError);
         return;
     }
 
     [_streamTask writeData:handshakeData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
         if (error != nil) {
-            completion(NO, error);
+            completion(nil, error);
         } else {
             NSLog(@"Writing is done!");
         }
@@ -147,12 +150,12 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         if (sself == nil) return;
 
         if (error != nil) {
-            completion(NO, error);
+            completion(nil, error);
         }
         else {
             NSError *parseError;
-            BOOL isConnectionEstablished = [handshakeHandler parseHandshakeResponse:data error:&parseError];
-            completion(isConnectionEstablished, parseError);
+            WRHandshakePreferences *preferences = [handshakeHandler parseHandshakeResponse:data error:&parseError];
+            completion(preferences, parseError);
         }
     }];
 }
@@ -164,7 +167,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         return NO;
     }
 
-    NSData *frameData = [WRFrameWriter buildFrameFromData:data opCode:opcode error:outError];
+    NSData *frameData = [_frameWriter buildFrameFromData:data opCode:opcode error:outError];
 
     if (frameData == nil) {
         return NO;
@@ -220,6 +223,18 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     [_streamTask closeRead];
     [_streamTask closeWrite];
     self.state = WRWebsocketStateClosed;
+}
+
+- (void)setupFrameHandlersWithPreferences:(WRHandshakePreferences *)preferences
+{
+    _frameWriter = [[WRFrameWriter alloc] init];
+    _frameReader = [[WRFrameReader alloc] init];
+    _frameReader.delegate = self;
+
+    if (_enabledPerMessageDeflate) {
+        _frameWriter.deflater = [[WRDataDeflater alloc] initWithWindowBits:preferences.maxWindowBits memoryLevel:kWRCompressionMemoryLevel noContextTakeover:preferences.noContextTakeover];
+        _frameReader.inflater = [[WRDataInflater alloc] initWithWindowBits:preferences.maxWindowBits];
+    }
 }
 
 #pragma mark - NSURLSessionDelegate

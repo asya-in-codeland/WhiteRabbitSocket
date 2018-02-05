@@ -8,10 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-@interface WRHandshakeHandler : NSObject
+@class WRHandshakePreferences;
 
-@property (nonatomic, assign, readonly) NSUInteger maxWindowBits;
-@property (nonatomic, assign, readonly) BOOL noContextTakeover;
+@interface WRHandshakeHandler : NSObject
 
 - (instancetype)initWithWebsocketProtocols:(NSArray<NSString *> *)websocketProtocols
                   enabledPerMessageDeflate:(BOOL)enabledPerMessageDeflate;
@@ -21,6 +20,6 @@
                           protocolVersion:(uint8_t)protocolVersion
                                     error:(NSError **)error;
 
-- (BOOL)parseHandshakeResponse:(NSData *)response error:(NSError **)error;
+- (WRHandshakePreferences *)parseHandshakeResponse:(NSData *)response error:(NSError **)error;
 
 @end

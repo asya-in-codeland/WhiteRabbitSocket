@@ -7,11 +7,17 @@
 //
 
 #import "WRHandshakeHandler.h"
+#import "WRHandshakePreferences.h"
 #import "NSURL+WebSocket.h"
 #import "NSError+WRError.h"
 #import "NSString+SHA1.h"
 
 static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+@interface WRHandshakePreferences ()
+@property (nonatomic, assign) NSUInteger maxWindowBits;
+@property (nonatomic, assign) BOOL noContextTakeover;
+@end
 
 @implementation WRHandshakeHandler {
     NSString *_securityKey;
@@ -31,9 +37,6 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
         }
         _securityKey = [data base64EncodedStringWithOptions:0];
         _enabledPerMessageDeflate = enabledPerMessageDeflate;
-
-        _noContextTakeover = NO;
-        _maxWindowBits = 15;
     }
     return self;
 }
@@ -96,13 +99,13 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     return messageData;
 }
 
-- (BOOL)parseHandshakeResponse:(NSData *)data error:(NSError *__autoreleasing *)error
+- (WRHandshakePreferences *)parseHandshakeResponse:(NSData *)data error:(NSError *__autoreleasing *)error
 {
     //TODO: error may be nil, unexpectedly ><
 
     if (data == nil) {
         *error = [NSError errorWithCode:1334 description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)12334]];
-        return NO;
+        return nil;
     }
 
     CFHTTPMessageRef response = CFHTTPMessageCreateEmpty(NULL, NO);
@@ -113,19 +116,19 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     NSInteger responseCode = CFHTTPMessageGetResponseStatusCode(response);
     if (responseCode >= 400) {
         *error = [NSError errorWithCode:responseCode description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];
-        return NO;
+        return nil;
     }
 
     NSString *upgradeHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Upgrade")));
     if (![upgradeHeader isEqualToString:@"websocket"]) {
         *error = [NSError errorWithCode:responseCode description:@"Invalid Upgrade response"];
-        return NO;
+        return nil;
     }
 
     NSString *connectionHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Connection")));
     if (![connectionHeader isEqualToString:@"Upgrade"]) {
         *error = [NSError errorWithCode:responseCode description:@"Invalid Connection response"];
-        return NO;
+        return nil;
     }
 
     NSString *acceptHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Accept")));
@@ -133,14 +136,14 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     NSString *expectedAccept =  [[concattedString SHA1] base64EncodedStringWithOptions:0];;
     if(acceptHeader == nil || ![acceptHeader isEqualToString:expectedAccept]) {
         *error = [NSError errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."];
-        return NO;
+        return nil;
     }
     
     NSString *negotiatedProtocol = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Protocol")));
     if (negotiatedProtocol != nil) {
         if ([_websocketProtocols indexOfObject:negotiatedProtocol] == NSNotFound) {
             *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Protocol that wasn't requested."];
-            return NO;
+            return nil;
         }
     }
 
@@ -149,20 +152,22 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
 
     if (_enabledPerMessageDeflate && ![perMessageDeflateHeader containsString:@"permessage-deflate"]) {
         *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
-        return NO;
+        return nil;
     }
+
+    WRHandshakePreferences *preferences = [WRHandshakePreferences new];
 
     NSArray *extensions = [perMessageDeflateHeader componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@",;"]];
     for (NSString *extension in extensions) {
         NSString *trimedExtension = [extension stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
         if ([trimedExtension containsString:@"client_no_context_takeover"]) {
-            _noContextTakeover = YES;
+            preferences.noContextTakeover = YES;
         } else if ([trimedExtension containsString:@"client_max_window_bits"]) {
-            _maxWindowBits = [[trimedExtension componentsSeparatedByString:@"="].lastObject integerValue];
+            preferences.maxWindowBits = [[trimedExtension componentsSeparatedByString:@"="].lastObject integerValue];
         }
     }
 
-    return YES;
+    return preferences;
 }
 
 @end

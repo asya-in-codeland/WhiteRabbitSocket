@@ -12,7 +12,6 @@
 
 - (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel noContextTakeover:(BOOL)noContextTakeover;
 
-- (BOOL)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError;
-- (NSData *)deflationResult; //stop here!!!!! должны вернуть _deflateBuffer
+- (NSData *)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError;
 
 @end

@@ -15,8 +15,7 @@
     NSUInteger _memoryLevel;
     uint8_t _chunkBuffer[16384];
     z_stream _stream;
-    
-    NSMutableData *_deflateBuffer;
+
     BOOL _noContextTakeover;
 }
 
@@ -33,6 +32,8 @@
         
         bzero(&_stream, sizeof(_stream));
         bzero(_chunkBuffer, sizeof(_chunkBuffer));
+
+        [self buildDeflaterWithError:nil];
     }
     return self;
 }
@@ -44,15 +45,19 @@
 
 #pragma mark - Public
 
-- (BOOL)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError
+- (NSData *)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError
 {
     NSParameterAssert(data != nil);
     
-    [self deflateBufferLazyInitializationWithError:outError];
+    if(_noContextTakeover && ![self buildDeflaterWithError:outError]) {
+        return nil;
+    }
     
     _stream.avail_in = (uInt)data.length;
     _stream.next_in = (Bytef *)data.bytes;
-    
+
+    NSMutableData *deflatedBuffer = [NSMutableData data];
+
     do {
         _stream.avail_out = (uInt)sizeof(_chunkBuffer);
         _stream.next_out = (Bytef *)_chunkBuffer;
@@ -61,49 +66,33 @@
         
         uInt gotBack = sizeof(_chunkBuffer) - _stream.avail_out;
         if(gotBack > 0) {
-            [_deflateBuffer appendBytes:_chunkBuffer length:gotBack];
+            [deflatedBuffer appendBytes:_chunkBuffer length:gotBack];
         }
     } while(_stream.avail_out == 0);
-    
-    return YES;
-}
 
-- (void)completeDeflate
-{
-    //надо ли делать вычитание, раз _deflateBuffer создаётся с пустым капасити
-    if(_deflateBuffer.length > 4) {
-        _deflateBuffer.length -= 4;
-    } else {
-        _deflateBuffer.length = 0;
-    }
-
-    if (_noContextTakeover) {
+    if(_noContextTakeover) {
         [self reset];
     }
+
+    return deflatedBuffer;
 }
 
 #pragma mark - Private
 
-- (void)deflateBufferLazyInitializationWithError:(NSError *__autoreleasing *)outError
+- (BOOL)buildDeflaterWithError:(NSError *__autoreleasing *)outError
 {
-    if (_deflateBuffer == nil) {
-        if(deflateInit2(&_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, _windowBits, _memoryLevel, Z_FIXED) != Z_OK) {
-            *outError = [NSError errorWithCode:4321 description:@"Failed to initialize deflate stream"];
-            return;
-        }
-        
-        _deflateBuffer = [NSMutableData data];
+    if(deflateInit2(&_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, _windowBits, _memoryLevel, Z_FIXED) != Z_OK) {
+        *outError = [NSError errorWithCode:4321 description:@"Failed to initialize deflate stream"];
+        return NO;
     }
+    return YES;
 }
 
 - (void)reset
 {
-    if(_deflateBuffer != nil) {
-        _deflateBuffer = nil;
-        deflateEnd(&_stream);
-        bzero(&_stream, sizeof(_stream));
-        bzero(_chunkBuffer, sizeof(_chunkBuffer));
-    }
+    deflateEnd(&_stream);
+    bzero(&_stream, sizeof(_stream));
+    bzero(_chunkBuffer, sizeof(_chunkBuffer));
 }
 
 @end

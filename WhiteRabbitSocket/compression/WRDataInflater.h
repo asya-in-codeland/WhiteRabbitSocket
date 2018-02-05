@@ -10,11 +10,9 @@
 
 @interface WRDataInflater : NSObject
 
-- (instancetype)initWithWindowBits:(NSInteger)windowBits;
+- (instancetype)initWithWindowBits:(NSInteger)windowBits noContextTakeover:(BOOL)noContextTakeover;
 
-- (BOOL)inflateBytes:(const void *)bytes length:(NSUInteger)length error:(NSError *__autoreleasing *)outError;
-- (BOOL)completeInflate:(NSError *__autoreleasing *)outError;
-
-- (void)reset;
+- (NSData *)inflateData:(NSData *)data error:(NSError *__autoreleasing *)outError;
+- (void)cancel;
 
 @end

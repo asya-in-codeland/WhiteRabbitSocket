@@ -26,6 +26,7 @@
 		22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */; };
 		22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */; };
 		261C5F661F9E574400702814 /* WRSIMDFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 261C5F651F9E574400702814 /* WRSIMDFunction.m */; };
+		264E29512028BB7200181D79 /* WRHandshakePreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 264E29502028BB7200181D79 /* WRHandshakePreferences.m */; };
 		265896FE1FB95EA30029FA23 /* WRReadableData.m in Sources */ = {isa = PBXBuildFile; fileRef = 265896FD1FB95EA30029FA23 /* WRReadableData.m */; };
 		2668A0081FC2FE3B00E403AA /* WRProxyFetcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 2668A0071FC2FE3B00E403AA /* WRProxyFetcher.m */; };
 		2668A00B1FC332B900E403AA /* WRFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 2668A00A1FC332B900E403AA /* WRFrame.m */; };
@@ -73,6 +74,8 @@
 		22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+WRError.m"; sourceTree = "<group>"; };
 		261C5F641F9E574400702814 /* WRSIMDFunction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRSIMDFunction.h; sourceTree = "<group>"; };
 		261C5F651F9E574400702814 /* WRSIMDFunction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRSIMDFunction.m; sourceTree = "<group>"; };
+		264E294F2028BB7200181D79 /* WRHandshakePreferences.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRHandshakePreferences.h; sourceTree = "<group>"; };
+		264E29502028BB7200181D79 /* WRHandshakePreferences.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRHandshakePreferences.m; sourceTree = "<group>"; };
 		265896FC1FB95EA30029FA23 /* WRReadableData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRReadableData.h; sourceTree = "<group>"; };
 		265896FD1FB95EA30029FA23 /* WRReadableData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRReadableData.m; sourceTree = "<group>"; };
 		2668A0071FC2FE3B00E403AA /* WRProxyFetcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRProxyFetcher.m; sourceTree = "<group>"; };
@@ -162,6 +165,7 @@
 		22BFA8951F14022000CCB6D5 /* WhiteRabbitSocket */ = {
 			isa = PBXGroup;
 			children = (
+				264E294E2028BB4100181D79 /* handshake */,
 				22084FAE1FC1C79200A12EF1 /* proxy */,
 				22070A141FB874CF00F43FC3 /* frames */,
 				229AD58B1F9CE0DE00CD3595 /* compression */,
@@ -217,14 +221,23 @@
 		22BFA8B41F1B45F900CCB6D5 /* utils */ = {
 			isa = PBXGroup;
 			children = (
-				22BFA8BF1F1B5BB400CCB6D5 /* WRHandshakeHandler.h */,
-				22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */,
 				261C5F641F9E574400702814 /* WRSIMDFunction.h */,
 				261C5F651F9E574400702814 /* WRSIMDFunction.m */,
 				265896FC1FB95EA30029FA23 /* WRReadableData.h */,
 				265896FD1FB95EA30029FA23 /* WRReadableData.m */,
 			);
 			path = utils;
+			sourceTree = "<group>";
+		};
+		264E294E2028BB4100181D79 /* handshake */ = {
+			isa = PBXGroup;
+			children = (
+				22BFA8BF1F1B5BB400CCB6D5 /* WRHandshakeHandler.h */,
+				22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */,
+				264E294F2028BB7200181D79 /* WRHandshakePreferences.h */,
+				264E29502028BB7200181D79 /* WRHandshakePreferences.m */,
+			);
+			path = handshake;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -299,6 +312,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				264E29512028BB7200181D79 /* WRHandshakePreferences.m in Sources */,
 				26EBBB0E1F965CA00091A64E /* NSString+SHA1.m in Sources */,
 				22BFA8B71F1B46B300CCB6D5 /* NSURL+WebSocket.m in Sources */,
 				229AD5931F9CE64800CD3595 /* WRSSLPinningPolicy.m in Sources */,

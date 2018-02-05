@@ -22,7 +22,10 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     BOOL shouldCompressData = _deflater != nil && payloadData.length > 0 && (opCode == WROpCodeText || opCode == WROpCodeBinary);
 
     if (shouldCompressData) {
-        payloadData = [self compressData:payloadData];
+        payloadData = [_deflater deflateData:payloadData error:error];
+        if (payloadData == nil) {
+            return nil;
+        }
     }
 
     size_t payloadLength = payloadData.length;
@@ -89,34 +92,4 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     return frameData;
 }
 
-- (NSData *)compressData:(NSData *)data
-{
-    NSMutableData *deflated = [NSMutableData dataWithCapacity:data.length/4];
-
-    NSError *error = nil;
-    [_deflater deflateData:data error:&error];
-//    // begin deflater
-//    if(![_deflater begin:deflated error:&error]) {
-//        NSAssert(NO, error.localizedDescription);
-//        [self failWithError:error];
-//        [_deflater reset];
-//        return;
-//    }
-//
-//    // append bytes
-//    if(![_deflater appendBytes:[payload bytes] length:[payload length] error:&error]) {
-//        NSAssert(NO, error.localizedDescription);
-//        [self failWithError:error];
-//        [_deflater reset];
-//        return;
-//    }
-//
-//    // end deflater
-//    if(![_deflater end:&error]) {
-//        NSAssert(NO, error.localizedDescription);
-//        [self failWithError:error];
-//        [_deflater reset];
-//        return;
-//    }
-}
 @end
