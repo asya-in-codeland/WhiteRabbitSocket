@@ -54,7 +54,7 @@
         
         ret = inflate(&_stream, Z_SYNC_FLUSH);
         if(ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
-            *outError = [NSError errorWithCode:4321 description:@"Failed to inflate bytes"];
+            *outError = [NSError wr_errorWithCode:4321 description:@"Failed to inflate bytes"];
             return nil;
         }
         
@@ -70,19 +70,10 @@
 
 - (void)cancel
 {
-    uint8_t finish[4] = {0x00, 0x00, 0xff, 0xff};
-    [self appendBytes:finish length:sizeof(finish) error:outError];
-
-    NSData *result = _inflateBuffer;
-
     if (_noContextTakeover) {
         [self reset];
-        [self buildInflateBufferWithError:outError];
+        [self buildInflateBufferWithError:nil];
     }
-
-    _inflateBuffer = [NSMutableData new];
-
-    return result;
 }
 
 #pragma mark - Private
@@ -90,7 +81,7 @@
 - (void)buildInflateBufferWithError:(NSError *__autoreleasing *)outError
 {
     if(inflateInit2(&_stream, _windowBits) != Z_OK) {
-        *outError = [NSError errorWithCode:4321 description:@"Failed to initialize inflate stream"];
+        *outError = [NSError wr_errorWithCode:4321 description:@"Failed to initialize inflate stream"];
     }
 }
 

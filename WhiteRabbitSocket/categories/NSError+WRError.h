@@ -10,7 +10,7 @@
 
 @interface NSError (WRError)
 
-+ (instancetype)errorWithCode:(NSInteger)code description:(NSString *)description;
-+ (instancetype)errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code description:(NSString *)description;
++ (instancetype)wr_errorWithCode:(NSInteger)code description:(NSString *)description;
++ (instancetype)wr_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code description:(NSString *)description;
 
 @end

@@ -10,6 +10,7 @@
 #import "WRFrame.h"
 #import "WRFrameMasks.h"
 #import "WRReadableData.h"
+#import "WRDataInflater.h"
 #import "NSError+WRError.h"
 
 typedef NS_ENUM(NSInteger, WRFrameReaderState) {
@@ -110,8 +111,11 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             }
             
             NSInteger appendedDataLength = _currentFrame.payloadCapacity - _currentFrame.payload.length;
-            //TODO: *сегодня мы узнали* нам могут приходить фреймы сжатый и нет в одном сообщении (см. флаг WRRsv1Mask), поэтому надо уметь класть в _message inflated и row payload, как сделали те чувачки.
-            [_currentFrame.payload appendData:[data readDataOfLength:appendedDataLength]];
+            NSData *payload = [data readDataOfLength:appendedDataLength];
+            if (_currentFrame.rsv1) {
+                payload = [_inflater inflateData:payload error:error];
+            }
+            [_currentFrame.payload appendData:payload];
             
             _framesCount++;
             [_message appendData:_currentFrame.payload];
@@ -128,10 +132,11 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 {
     const uint8_t *headerBuffer = data.bytes;
     assert(data.length >= 2);
-    
-    //TODO: check rsv flags for deflate
-    if (headerBuffer[0] & WRRsv1Mask) {
-        *error = [NSError errorWithCode:2133 description: @"Server used RSV bits."];
+
+    _currentFrame.rsv1 = !!(headerBuffer[0] & WRRsv1Mask);
+    BOOL isPerMessageDeflateEnable = _inflater != nil;
+    if (_currentFrame.rsv1 && !isPerMessageDeflateEnable) {
+        *error = [NSError wr_errorWithCode:2133 description: @"Server used RSV bits."];
         return NO;
     }
     
@@ -140,12 +145,12 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     BOOL isControlFrame = (receivedOpcode == WROpCodePing || receivedOpcode == WROpCodePong || receivedOpcode == WROpCodeClose);
     
     if (!isControlFrame && receivedOpcode != 0 && _framesCount > 0) {
-        *error = [NSError errorWithCode:2133 description: @"All data frames after the initial data frame must have opcode 0."];
+        *error = [NSError wr_errorWithCode:2133 description: @"All data frames after the initial data frame must have opcode 0."];
         return NO;
     }
 
     if (receivedOpcode == 0 && _framesCount == 0) {
-        *error = [NSError errorWithCode:2133 description: @"Cannot continue a message."];
+        *error = [NSError wr_errorWithCode:2133 description: @"Cannot continue a message."];
         return NO;
     }
 
@@ -155,7 +160,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     _currentFrame.masked = !!(WRMaskMask & headerBuffer[1]);
     
     if (_currentFrame.masked) {
-        *error = [NSError errorWithCode:2133 description: @"Client must receive unmasked data."];
+        *error = [NSError wr_errorWithCode:2133 description: @"Client must receive unmasked data."];
         return NO;
     }
     
@@ -169,6 +174,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     if (_currentFrame.fin) {
         [self notifyDelegate];
         _message = [NSMutableData new];
+        [_inflater cancel];
     }
 
     _currentFrame = [WRFrame new];

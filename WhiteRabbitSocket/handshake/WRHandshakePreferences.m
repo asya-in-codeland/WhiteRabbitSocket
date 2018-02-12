@@ -14,7 +14,7 @@
 {
     self = [super init];
     if (self != nil) {
-        _maxWindowBits = -15;
+        _maxWindowBits = 15;
         _noContextTakeover = NO;
     }
     return self;

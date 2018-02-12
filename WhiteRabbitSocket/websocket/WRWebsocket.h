@@ -20,6 +20,8 @@ typedef NS_ENUM(NSInteger, WRWebsocketState) {
     WRWebsocketStateClosed
 };
 
+__attribute__((objc_subclassing_restricted))
+
 @interface WRWebsocket : NSObject
 
 @property (nonatomic, weak, nullable) id<WRWebsocketDelegate> delegate;

@@ -1,5 +1,5 @@
 //
-//  NSString+SHA1.h
+//  NSString+WRSHA1.h
 //  WhiteRabbitSocket
 //
 //  Created by Anastasia Kononova on 17/10/2017.
@@ -8,8 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-@interface NSString (SHA1)
+@interface NSString (WRSHA1)
 
-- (NSData *)SHA1;
+- (NSData *)wr_SHA1;
 
 @end

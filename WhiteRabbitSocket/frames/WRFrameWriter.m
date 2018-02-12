@@ -32,7 +32,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
 
     NSMutableData *frameData = [[NSMutableData alloc] initWithLength:payloadLength + WRFrameHeaderOverhead];
     if (frameData == nil) {
-        *error = [NSError errorWithCode:2133 description: @"Message too big."];
+        *error = [NSError wr_errorWithCode:2133 description: @"Message too big."];
         return nil;
     }
     
@@ -74,7 +74,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     size_t randomBytesSize = sizeof(uint32_t);
     int result = SecRandomCopyBytes(kSecRandomDefault, randomBytesSize, maskKey);
     if (result != errSecSuccess) {
-        *error = [NSError errorWithCode:2133 description: @"Message too big."];
+        *error = [NSError wr_errorWithCode:2133 description: @"Message too big."];
         return nil;
     }
     

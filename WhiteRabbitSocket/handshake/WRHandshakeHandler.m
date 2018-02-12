@@ -8,9 +8,9 @@
 
 #import "WRHandshakeHandler.h"
 #import "WRHandshakePreferences.h"
-#import "NSURL+WebSocket.h"
+#import "NSURL+WRWebSocket.h"
 #import "NSError+WRError.h"
-#import "NSString+SHA1.h"
+#import "NSString+WRSHA1.h"
 
 static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -50,12 +50,12 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     
     CFHTTPMessageRef message = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"), (__bridge CFURLRef)url, kCFHTTPVersion1_1);
     
-    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Host"), (__bridge CFStringRef)url.handshakeHost);
+    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Host"), (__bridge CFStringRef)url.wr_handshakeHost);
     
     NSMutableData *keyBytes = [[NSMutableData alloc] initWithLength:16];
     int result = SecRandomCopyBytes(kSecRandomDefault, keyBytes.length, keyBytes.mutableBytes);
     if (result != 0) {
-        *error = [NSError errorWithCode:result description:@"Generates an array of cryptographically secure random bytes."];
+        *error = [NSError wr_errorWithCode:result description:@"Generates an array of cryptographically secure random bytes."];
         return nil;
     }
     
@@ -68,7 +68,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
         }];
     }
     
-    NSString *baseAuthorization = url.baseAuthorization;
+    NSString *baseAuthorization = url.wr_baseAuthorization;
     if (baseAuthorization != nil) {
         CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Authorization"), (__bridge CFStringRef)baseAuthorization);
     }
@@ -78,7 +78,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Key"), (__bridge CFStringRef)_securityKey);
     CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Version"), (__bridge CFStringRef)[NSString stringWithFormat:@"%d", protocolVersion]);
     
-    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Origin"), (__bridge CFStringRef)url.origin);
+    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Origin"), (__bridge CFStringRef)url.wr_origin);
     
     if (_websocketProtocols.count > 0) {
         CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Sec-WebSocket-Protocol"),
@@ -104,7 +104,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     //TODO: error may be nil, unexpectedly ><
 
     if (data == nil) {
-        *error = [NSError errorWithCode:1334 description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)12334]];
+        *error = [NSError wr_errorWithCode:1334 description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)12334]];
         return nil;
     }
 
@@ -115,34 +115,34 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
 
     NSInteger responseCode = CFHTTPMessageGetResponseStatusCode(response);
     if (responseCode >= 400) {
-        *error = [NSError errorWithCode:responseCode description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];
+        *error = [NSError wr_errorWithCode:responseCode description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];
         return nil;
     }
 
     NSString *upgradeHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Upgrade")));
     if (![upgradeHeader isEqualToString:@"websocket"]) {
-        *error = [NSError errorWithCode:responseCode description:@"Invalid Upgrade response"];
+        *error = [NSError wr_errorWithCode:responseCode description:@"Invalid Upgrade response"];
         return nil;
     }
 
     NSString *connectionHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Connection")));
     if (![connectionHeader isEqualToString:@"Upgrade"]) {
-        *error = [NSError errorWithCode:responseCode description:@"Invalid Connection response"];
+        *error = [NSError wr_errorWithCode:responseCode description:@"Invalid Connection response"];
         return nil;
     }
 
     NSString *acceptHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Accept")));
     NSString *concattedString = [_securityKey stringByAppendingString:WRWebSocketAppendToSecKeyString];
-    NSString *expectedAccept =  [[concattedString SHA1] base64EncodedStringWithOptions:0];;
+    NSString *expectedAccept =  [[concattedString wr_SHA1] base64EncodedStringWithOptions:0];;
     if(acceptHeader == nil || ![acceptHeader isEqualToString:expectedAccept]) {
-        *error = [NSError errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."];
+        *error = [NSError wr_errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."];
         return nil;
     }
     
     NSString *negotiatedProtocol = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Protocol")));
     if (negotiatedProtocol != nil) {
         if ([_websocketProtocols indexOfObject:negotiatedProtocol] == NSNotFound) {
-            *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Protocol that wasn't requested."];
+            *error = [NSError wr_errorWithCode:2133 description: @"Server specified Sec-WebSocket-Protocol that wasn't requested."];
             return nil;
         }
     }
@@ -151,7 +151,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     NSString *perMessageDeflateHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Extensions")));
 
     if (_enabledPerMessageDeflate && ![perMessageDeflateHeader containsString:@"permessage-deflate"]) {
-        *error = [NSError errorWithCode:2133 description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
+        *error = [NSError wr_errorWithCode:2133 description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
         return nil;
     }
 

@@ -8,7 +8,7 @@
 
 #import "WRWebsocket.h"
 #import "WRWebsocketDelegate.h"
-#import "NSURL+WebSocket.h"
+#import "NSURL+WRWebSocket.h"
 #import "WRHandshakeHandler.h"
 #import "WRHandshakePreferences.h"
 #import "NSError+WRError.h"
@@ -61,7 +61,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
-        _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.websocketPort];
+        _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.wr_websocketPort];
     }
     return self;
 }
@@ -84,7 +84,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
         if (preferences != nil) {
             sself.state = WRWebsocketStateConnected;
-            [sself.delegate websocketDidEstablishConnection:sself];
+            if ([sself.delegate respondsToSelector:@selector(websocketDidEstablishConnection:)]) {
+                [sself.delegate websocketDidEstablishConnection:sself];
+            }
 
             [sself setupFrameHandlersWithPreferences:preferences];
             [sself readData];
@@ -98,12 +100,15 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 {
     if (_state != WRWebsocketStateConnected) { return; }
 
-    self.state = WRWebsocketStateClosing;
-
     NSError *error;
     BOOL result = [self writeData:nil opcode:WROpCodeClose error:&error];
     if (!result) {
         [self onFailWithError:error];
+    }
+    else {
+        self.state = WRWebsocketStateClosing;
+        //start timer for closing connection
+        //client
     }
 }
 
@@ -136,6 +141,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         return;
     }
 
+
+    NSLog(@"Handshake request: %@", [[NSString alloc] initWithData:handshakeData encoding:kCFStringEncodingUTF8]);
+
     [_streamTask writeData:handshakeData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
         if (error != nil) {
             completion(nil, error);
@@ -154,6 +162,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         }
         else {
             NSError *parseError;
+            NSLog(@"Handshake response: %@", [[NSString alloc] initWithData:data encoding:kCFStringEncodingUTF8]);
             WRHandshakePreferences *preferences = [handshakeHandler parseHandshakeResponse:data error:&parseError];
             completion(preferences, parseError);
         }
@@ -163,7 +172,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 - (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError
 {
     if (_state != WRWebsocketStateConnected) {
-        *outError = [NSError errorWithCode:1234 description:@"Unable to write data, connection is closed."];
+        *outError = [NSError wr_errorWithCode:1234 description:@"Unable to write data, connection is closed."];
         return NO;
     }
 
@@ -176,8 +185,12 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     __weak typeof(self) wself = self;
     [_streamTask writeData:frameData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
         if (error != nil) {
+            // if _state == isClosing (client + server)
+            // close connection/notify delegate
             [wself onFailWithError:error];
         } else {
+            // if _state == isClosing (server, так как не ждём эха)
+            // close connection/notify delegate
             NSLog(@"Writing is done!");
         }
     }];
@@ -214,8 +227,13 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (void)onFailWithError:(NSError *)error
 {
+    BOOL isClosing = _state == WRWebsocketStateClosing;
     [self closeConnection];
-    [self.delegate websocket:self didFailWithError:error];
+    if (isClosing) {
+        [self.delegate webSocket:self didCloseWithData:nil];
+    } else {
+        [self.delegate websocket:self didFailWithError:error];
+    }
 }
 
 - (void)closeConnection
@@ -233,7 +251,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
     if (_enabledPerMessageDeflate) {
         _frameWriter.deflater = [[WRDataDeflater alloc] initWithWindowBits:preferences.maxWindowBits memoryLevel:kWRCompressionMemoryLevel noContextTakeover:preferences.noContextTakeover];
-        _frameReader.inflater = [[WRDataInflater alloc] initWithWindowBits:preferences.maxWindowBits];
+        _frameReader.inflater = [[WRDataInflater alloc] initWithWindowBits:preferences.maxWindowBits noContextTakeover:preferences.noContextTakeover];
     }
 }
 
@@ -275,6 +293,8 @@ didCompleteWithError:(nullable NSError *)error
 - (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data
 {
     if (_state == WRWebsocketStateClosing) {
+        // client
+        // close connection/notify delegate
         [self closeConnection];
         [_delegate webSocket:self didCloseWithData:data];
     }

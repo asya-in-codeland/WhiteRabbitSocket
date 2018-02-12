@@ -1,20 +1,20 @@
 //
-//  NSURL+WebSocket.m
+//  NSURL+WRWebSocket.m
 //  WhiteRabbitSocket
 //
 //  Created by Anastasia Sviridenko on 16/07/2017.
 //  Copyright © 2017 ASya. All rights reserved.
 //
 
-#import "NSURL+WebSocket.h"
+#import "NSURL+WRWebSocket.h"
 
-@implementation NSURL (WebSocket)
+@implementation NSURL (WRWebSocket)
 
-- (NSInteger)websocketPort
+- (NSInteger)wr_websocketPort
 {
     NSInteger port = self.port.integerValue;
     if (port == 0) {
-        if(self.isSecureConnection){
+        if(self.wr_isSecureConnection){
             port = 443;
         } else {
             port = 80;
@@ -23,7 +23,7 @@
     return port;
 }
 
-- (NSString *)handshakeHost
+- (NSString *)wr_handshakeHost
 {
     NSString *host = self.host;
     if (self.port != nil) {
@@ -32,13 +32,13 @@
     return host;
 }
 
-- (NSString *)baseAuthorization
+- (NSString *)wr_baseAuthorization
 {
     NSData *data = [[NSString stringWithFormat:@"%@:%@", self.user, self.password] dataUsingEncoding:NSUTF8StringEncoding];
     return [NSString stringWithFormat:@"Basic %@", [data base64EncodedStringWithOptions:0]];
 }
 
-- (NSString *)origin
+- (NSString *)wr_origin
 {
     NSMutableString *origin = [NSMutableString string];
     
@@ -62,7 +62,7 @@
     return origin;
 }
 
-- (BOOL)isSecureConnection
+- (BOOL)wr_isSecureConnection
 {
     NSString *scheme = self.scheme.lowercaseString;
     return ([scheme isEqualToString:@"wss"] || [scheme isEqualToString:@"https"]);

@@ -8,7 +8,7 @@
 
 #import "WRProxyFetcher.h"
 #import "WRProxy.h"
-#import "NSURL+WebSocket.h"
+#import "NSURL+WRWebSocket.h"
 
 @implementation WRProxyFetcher {
     NSURL *_url;
@@ -39,7 +39,7 @@
 {
     NSDictionary *proxySettings = CFBridgingRelease(CFNetworkCopySystemProxySettings());
     
-    NSURL *httpURL = [NSURL URLWithString:_url.origin];
+    NSURL *httpURL = [NSURL URLWithString:_url.wr_origin];
     
     NSArray *proxies = CFBridgingRelease(CFNetworkCopyProxiesForURL((__bridge CFURLRef)httpURL, (__bridge CFDictionaryRef)proxySettings));
     if (proxies.count == 0) {
@@ -116,7 +116,7 @@
     CFBridgingRelease(CFNetworkCopyProxiesForURL((__bridge CFURLRef)_url, (__bridge CFDictionaryRef)proxySettings));
 
     CFErrorRef err = NULL;
-    NSURL *httpURL = [NSURL URLWithString:_url.origin];
+    NSURL *httpURL = [NSURL URLWithString:_url.wr_origin];
     
     NSArray *proxies = CFBridgingRelease(CFNetworkCopyProxiesForAutoConfigurationScript((__bridge CFStringRef)script,(__bridge CFURLRef)httpURL, &err));
     if (err == nil && proxies.count > 0) {
