@@ -91,24 +91,23 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
             [sself setupFrameHandlersWithPreferences:preferences];
             [sself readData];
         } else {
-            [sself onFailWithError:error];
+            [sself.delegate websocket:sself didFailWithError:error];
+            [sself closeStream];
         }
     }];
 }
 
 - (void)close
 {
+    // TODO: WRWebsocketStateConnecting?
     if (_state != WRWebsocketStateConnected) { return; }
+
+    self.state = WRWebsocketStateClosed;
 
     NSError *error;
     BOOL result = [self writeData:nil opcode:WROpCodeClose error:&error];
     if (!result) {
-        [self onFailWithError:error];
-    }
-    else {
-        self.state = WRWebsocketStateClosing;
-        //start timer for closing connection
-        //client
+        [self closeStream];
     }
 }
 
@@ -184,13 +183,18 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
     __weak typeof(self) wself = self;
     [_streamTask writeData:frameData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
+        __strong typeof(wself) sself = wself;
+        if (sself == nil) { return; }
+
+        if (sself.state == WRWebsocketStateClosed) {
+            [sself closeStream];
+            return;
+        }
+
         if (error != nil) {
-            // if _state == isClosing (client + server)
-            // close connection/notify delegate
-            [wself onFailWithError:error];
+            [sself.delegate websocket:sself didFailWithError:error];
+            [sself closeStream];
         } else {
-            // if _state == isClosing (server, так как не ждём эха)
-            // close connection/notify delegate
             NSLog(@"Writing is done!");
         }
     }];
@@ -206,11 +210,12 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         if (sself == nil) return;
 
         if (error != nil) {
-            [sself onFailWithError:error];
+            [sself.delegate websocket:sself didFailWithError:error];
+            [sself closeStream];
         }
         else {
             if (atEOF) {
-                [sself closeConnection];
+                [sself closeStream];
             }
             else {
                 NSError *readerError;
@@ -225,22 +230,11 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }];
 }
 
-- (void)onFailWithError:(NSError *)error
-{
-    BOOL isClosing = _state == WRWebsocketStateClosing;
-    [self closeConnection];
-    if (isClosing) {
-        [self.delegate webSocket:self didCloseWithData:nil];
-    } else {
-        [self.delegate websocket:self didFailWithError:error];
-    }
-}
-
-- (void)closeConnection
+- (void)closeStream
 {
     [_streamTask closeRead];
     [_streamTask closeWrite];
-    self.state = WRWebsocketStateClosed;
+    [self.delegate webSocket:self didCloseWithData:nil];
 }
 
 - (void)setupFrameHandlersWithPreferences:(WRHandshakePreferences *)preferences
@@ -292,14 +286,8 @@ didCompleteWithError:(nullable NSError *)error
 
 - (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data
 {
-    if (_state == WRWebsocketStateClosing) {
-        // client
-        // close connection/notify delegate
-        [self closeConnection];
-        [_delegate webSocket:self didCloseWithData:data];
-    }
+    NSAssert(self.state == WRWebsocketStateConnected, @"Getting close frame in %d state.", self.state);
 
-    //TODO: what about WRWebsocketStateConnecting state ><
     if (_state == WRWebsocketStateConnected) {
         [self close];
     }

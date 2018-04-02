@@ -16,7 +16,6 @@ FOUNDATION_EXPORT NSString * _Nonnull const kWRWebsocketErrorDomain;
 typedef NS_ENUM(NSInteger, WRWebsocketState) {
     WRWebsocketStateConnecting,
     WRWebsocketStateConnected,
-    WRWebsocketStateClosing,
     WRWebsocketStateClosed
 };
 
