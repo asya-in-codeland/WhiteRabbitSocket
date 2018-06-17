@@ -18,6 +18,7 @@
 #import "WRReadableData.h"
 #import "WRDataDeflater.h"
 #import "WRDataInflater.h"
+#import "WRDispatching.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -84,14 +85,16 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
         if (preferences != nil) {
             sself.state = WRWebsocketStateConnected;
-            if ([sself.delegate respondsToSelector:@selector(websocketDidEstablishConnection:)]) {
+            
+            backgroundDispatch(sself.delegate, @selector(websocketDidEstablishConnection:), ^{
                 [sself.delegate websocketDidEstablishConnection:sself];
-            }
-
+            });
             [sself setupFrameHandlersWithPreferences:preferences];
             [sself readData];
         } else {
-            [sself.delegate websocket:sself didFailWithError:error];
+            backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
+                [sself.delegate websocket:sself didFailWithError:error];
+            });
             [sself closeStream];
         }
     }];
@@ -192,7 +195,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         }
 
         if (error != nil) {
-            [sself.delegate websocket:sself didFailWithError:error];
+            backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
+                [sself.delegate websocket:sself didFailWithError:error];
+            });
             [sself closeStream];
         } else {
             NSLog(@"Writing is done!");
@@ -210,7 +215,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         if (sself == nil) return;
 
         if (error != nil) {
-            [sself.delegate websocket:sself didFailWithError:error];
+            backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
+                [sself.delegate websocket:sself didFailWithError:error];
+            });
             [sself closeStream];
         }
         else {
@@ -221,7 +228,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
                 NSError *readerError;
                 BOOL result = [sself->_frameReader readData:data error:&readerError];
                 if (!result) {
-                    [sself.delegate websocket:sself didFailWithError:readerError];
+                    backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
+                        [sself.delegate websocket:sself didFailWithError:readerError];
+                    });
                 }
 
                 [sself readData];
@@ -234,7 +243,9 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 {
     [_streamTask closeRead];
     [_streamTask closeWrite];
-    [self.delegate webSocket:self didCloseWithData:nil];
+    backgroundDispatch(self.delegate, @selector(websocket:didCloseWithData:), ^{
+        [self.delegate websocket:self didCloseWithData:nil];
+    });
 }
 
 - (void)setupFrameHandlersWithPreferences:(WRHandshakePreferences *)preferences
@@ -286,7 +297,7 @@ didCompleteWithError:(nullable NSError *)error
 
 - (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data
 {
-    NSAssert(self.state == WRWebsocketStateConnected, @"Getting close frame in %d state.", self.state);
+    NSAssert(self.state == WRWebsocketStateConnected, @"Getting close frame in %ld state.", (long)self.state);
 
     if (_state == WRWebsocketStateConnected) {
         [self close];
@@ -295,15 +306,17 @@ didCompleteWithError:(nullable NSError *)error
 
 - (void)frameReader:(WRFrameReader *)reader didProcessPing:(NSData *)data
 {
-    NSLog(@"Die ping");
-    [_delegate websocket:self didReceivePing:data];
+    backgroundDispatch(self.delegate, @selector(websocket:didReceivePing:), ^{
+        [self.delegate websocket:self didReceivePing:data];
+    });
     [self writeData:nil opcode:WROpCodePong error:nil];
 }
 
 - (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data
 {
-    NSLog(@"Der pong");
-    [_delegate webSocket:self didReceivePong:data];
+    backgroundDispatch(self.delegate, @selector(websocket:didReceivePong:), ^{
+        [self.delegate websocket:self didReceivePong:data];
+    });
 }
 
 @end

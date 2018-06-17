@@ -7,8 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "WRDispatchProtocol.h"
 
-@protocol WRWebsocketDelegate <NSObject>
+@protocol WRWebsocketDelegate <WRDispatchProtocol>
 @required
 - (void)websocket:(nonnull WRWebsocket *)websocket didReceiveData:(nonnull NSData *)data;
 - (void)websocket:(nonnull WRWebsocket *)websocket didReceiveMessage:(nonnull NSString *)message;
@@ -16,7 +17,7 @@
 
 @optional
 - (void)websocketDidEstablishConnection:(nonnull WRWebsocket *)websocket;
-- (void)websocket:(nonnull WRWebsocket *)webSocket didReceivePing:(nullable NSData *)data;
-- (void)webSocket:(nonnull WRWebsocket *)webSocket didReceivePong:(nullable NSData *)data;
-- (void)webSocket:(nonnull WRWebsocket *)webSocket didCloseWithData:(nullable NSData *)data;
+- (void)websocket:(nonnull WRWebsocket *)websocket didReceivePing:(nullable NSData *)data;
+- (void)websocket:(nonnull WRWebsocket *)websocket didReceivePong:(nullable NSData *)data;
+- (void)websocket:(nonnull WRWebsocket *)websocket didCloseWithData:(nullable NSData *)data;
 @end
