@@ -8,15 +8,17 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class WRDataInflater;
 @protocol WRFrameReaderDelegate;
 
 @interface WRFrameReader : NSObject
 
-@property (nonatomic, weak) id<WRFrameReaderDelegate> delegate;
-@property (nonatomic, strong) WRDataInflater *inflater;
+@property (nonatomic, weak, nullable) id<WRFrameReaderDelegate> delegate;
+@property (nonatomic, strong, nullable) WRDataInflater *inflater;
 
-- (BOOL)readData:(NSData *)data error:(NSError **)error;
+- (BOOL)readData:(NSData *)data error:(NSError * __autoreleasing  _Nullable *_Nullable)error;
 
 @end
 
@@ -27,3 +29,5 @@
 - (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data;
 - (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data;
 @end
+
+NS_ASSUME_NONNULL_END

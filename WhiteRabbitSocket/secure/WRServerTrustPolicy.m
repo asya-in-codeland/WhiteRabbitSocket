@@ -14,35 +14,29 @@
     BOOL _certificateChainValidationEnabled;
 }
 
-+ (instancetype)defaultEvaluationPolicy
-{
++ (instancetype)defaultEvaluationPolicy {
     return [self new];
 }
 
-+ (instancetype)pinnningEvaluationPolicyWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates
-{
++ (instancetype)pinnningEvaluationPolicyWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates {
     return [[WRSSLPinningPolicy alloc] initWithCertificates:pinnedCertificates allowSelfSignedCertificates:allowSelfSignedCertificates];
 }
 
-+ (instancetype)customEvaluationPolicyWithHandler:(BOOL (^)(SecTrustRef, NSString *))handler
-{
++ (instancetype)customEvaluationPolicyWithHandler:(BOOL (^)(SecTrustRef, NSString *))handler {
     return [[WRCustomPolicy alloc] initWithHandler:handler];
 }
 
 #pragma mark - Public
 
-- (SSLProtocol)minTLSSupportedProtocol
-{
+- (SSLProtocol)minTLSSupportedProtocol {
     return kTLSProtocol11;
 }
 
-- (SSLProtocol)maxTLSSupportedProtocol
-{
+- (SSLProtocol)maxTLSSupportedProtocol {
     return kTLSProtocol12;
 }
 
-- (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain
-{
+- (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain {
     NSMutableArray *policies = [NSMutableArray array];
     [policies addObject:(__bridge_transfer id)SecPolicyCreateSSL(true, (__bridge CFStringRef)domain)];
     SecTrustSetPolicies(serverTrust, (__bridge CFArrayRef)policies);

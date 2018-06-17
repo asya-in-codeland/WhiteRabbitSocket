@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface WRServerTrustPolicy : NSObject
 
 @property (nonatomic, assign, readonly) SSLProtocol maxTLSSupportedProtocol;
@@ -20,3 +22,5 @@
 - (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain;
 
 @end
+
+NS_ASSUME_NONNULL_END

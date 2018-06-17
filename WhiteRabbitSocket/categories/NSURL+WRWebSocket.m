@@ -10,8 +10,7 @@
 
 @implementation NSURL (WRWebSocket)
 
-- (NSInteger)wr_websocketPort
-{
+- (NSInteger)wr_websocketPort {
     NSInteger port = self.port.integerValue;
     if (port == 0) {
         if(self.wr_isSecureConnection){
@@ -23,8 +22,7 @@
     return port;
 }
 
-- (NSString *)wr_handshakeHost
-{
+- (NSString *)wr_handshakeHost {
     NSString *host = self.host;
     if (self.port != nil) {
         host = [host stringByAppendingFormat:@":%@", self.port];
@@ -32,14 +30,12 @@
     return host;
 }
 
-- (NSString *)wr_baseAuthorization
-{
+- (NSString *)wr_baseAuthorization {
     NSData *data = [[NSString stringWithFormat:@"%@:%@", self.user, self.password] dataUsingEncoding:NSUTF8StringEncoding];
     return [NSString stringWithFormat:@"Basic %@", [data base64EncodedStringWithOptions:0]];
 }
 
-- (NSString *)wr_origin
-{
+- (NSString *)wr_origin {
     NSMutableString *origin = [NSMutableString string];
     
     NSString *scheme = self.scheme.lowercaseString;
@@ -62,8 +58,7 @@
     return origin;
 }
 
-- (BOOL)wr_isSecureConnection
-{
+- (BOOL)wr_isSecureConnection {
     NSString *scheme = self.scheme.lowercaseString;
     return ([scheme isEqualToString:@"wss"] || [scheme isEqualToString:@"https"]);
 }

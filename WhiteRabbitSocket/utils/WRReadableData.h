@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface WRReadableData : NSObject
 
 @property (nonatomic, assign, readonly) NSUInteger length;
@@ -19,3 +21,5 @@
 - (void)seekToDataOffset:(NSInteger)offset;
 
 @end
+
+NS_ASSUME_NONNULL_END

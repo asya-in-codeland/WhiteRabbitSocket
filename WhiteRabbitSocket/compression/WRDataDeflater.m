@@ -19,8 +19,7 @@
     BOOL _noContextTakeover;
 }
 
-- (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel noContextTakeover:(BOOL)noContextTakeover
-{
+- (instancetype)initWithWindowBits:(NSInteger)windowBits memoryLevel:(NSUInteger)memoryLevel noContextTakeover:(BOOL)noContextTakeover {
     NSAssert(windowBits >= 1 && windowBits <= 15, @"windowBits must be between 1 and 15");
     NSAssert(memoryLevel >= 1 && memoryLevel <= 9, @"memory level must be between 1 and 9");
     
@@ -38,15 +37,13 @@
     return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     [self reset];
 }
 
 #pragma mark - Public
 
-- (NSData *)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError
-{
+- (NSData *)deflateData:(NSData *)data error:(NSError *__autoreleasing *)outError {
     NSParameterAssert(data != nil);
     
     if(_noContextTakeover && ![self buildDeflaterWithError:outError]) {
@@ -79,8 +76,7 @@
 
 #pragma mark - Private
 
-- (BOOL)buildDeflaterWithError:(NSError *__autoreleasing *)outError
-{
+- (BOOL)buildDeflaterWithError:(NSError *__autoreleasing *)outError {
     if(deflateInit2(&_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, _windowBits, _memoryLevel, Z_FIXED) != Z_OK) {
         *outError = [NSError wr_errorWithCode:4321 description:@"Failed to initialize deflate stream"];
         return NO;
@@ -88,8 +84,7 @@
     return YES;
 }
 
-- (void)reset
-{
+- (void)reset {
     deflateEnd(&_stream);
     bzero(&_stream, sizeof(_stream));
     bzero(_chunkBuffer, sizeof(_chunkBuffer));

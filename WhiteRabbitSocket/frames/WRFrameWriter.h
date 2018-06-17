@@ -9,12 +9,13 @@
 #import <Foundation/Foundation.h>
 #import "WRFrame.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class WRDataDeflater;
 
 @interface WRFrameWriter : NSObject
-
-@property (nonatomic, strong) WRDataDeflater *deflater;
-
-- (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error;
-
+@property (nonatomic, strong, nullable) WRDataDeflater *deflater;
+- (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError * __autoreleasing  _Nullable *_Nullable)error;
 @end
+
+NS_ASSUME_NONNULL_END

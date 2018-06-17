@@ -11,13 +11,11 @@
 
 @implementation NSError (WRError)
 
-+ (instancetype)wr_errorWithCode:(NSInteger)code description:(NSString *)description
-{
++ (instancetype)wr_errorWithCode:(NSInteger)code description:(NSString *)description {
     return [self wr_errorWithDomain:kWRWebsocketErrorDomain code:code description:description];
 }
 
-+ (instancetype)wr_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code description:(NSString *)description
-{
++ (instancetype)wr_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code description:(NSString *)description {
     return [self errorWithDomain:domain code:code userInfo:@{NSLocalizedDescriptionKey: description}];
 }
 

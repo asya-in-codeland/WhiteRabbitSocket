@@ -26,8 +26,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     NSInteger _framesCount;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self != nil) {
         _message = [NSMutableData new];
@@ -36,8 +35,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     return self;
 }
 
-- (BOOL)readData:(NSData *)data error:(NSError *__autoreleasing *)error
-{
+- (BOOL)readData:(NSData *)data error:(NSError *__autoreleasing *)error {
     //TODO: handle async
     NSLog(@"Start reading data...");
     return [self read:[[WRReadableData alloc] initWithData:data] error:error];
@@ -45,8 +43,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 
 #pragma mark - Private
 
-- (BOOL)read:(WRReadableData *)data error:(NSError *__autoreleasing *)error
-{
+- (BOOL)read:(WRReadableData *)data error:(NSError *__autoreleasing *)error {
     NSLog(@"data length: %lu", (unsigned long)data.length);
 
     if (data.length == 0) {
@@ -128,8 +125,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     }
 }
 
-- (BOOL)readHeader:(NSData *)data error:(NSError *__autoreleasing *)error
-{
+- (BOOL)readHeader:(NSData *)data error:(NSError *__autoreleasing *)error {
     const uint8_t *headerBuffer = data.bytes;
     assert(data.length >= 2);
 
@@ -169,8 +165,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     return YES;
 }
 
-- (void)completeFrameProcessingIfNeeded
-{
+- (void)completeFrameProcessingIfNeeded {
     if (_currentFrame.fin) {
         [self notifyDelegate];
         _message = [NSMutableData new];
@@ -180,8 +175,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     _currentFrame = [WRFrame new];
 }
 
-- (void)notifyDelegate
-{
+- (void)notifyDelegate {
     switch (_currentFrame.opcode) {
         case WROpCodeText:
             [_delegate frameReader:self didProcessText:[[NSString alloc] initWithData:_message encoding:NSUTF8StringEncoding]];

@@ -8,8 +8,12 @@
 
 #import "WRServerTrustPolicy.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface WRSSLPinningPolicy : WRServerTrustPolicy
 
 - (instancetype)initWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -12,8 +12,7 @@
     BOOL (^_evaluationHandler)(SecTrustRef serverTrust, NSString *domain);
 }
 
-- (instancetype)initWithHandler:(BOOL (^)(SecTrustRef serverTrust, NSString *domain))handler
-{
+- (instancetype)initWithHandler:(BOOL (^)(SecTrustRef serverTrust, NSString *domain))handler {
     self = [self init];
     if (self != nil) {
         if (handler == nil) {
@@ -26,8 +25,8 @@
     return self;
 }
 
-- (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain
-{
+- (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain {
     return _evaluationHandler(serverTrust, domain);
 }
+
 @end

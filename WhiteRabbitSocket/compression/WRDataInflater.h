@@ -8,11 +8,15 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface WRDataInflater : NSObject
 
 - (instancetype)initWithWindowBits:(NSInteger)windowBits noContextTakeover:(BOOL)noContextTakeover;
 
-- (NSData *)inflateData:(NSData *)data error:(NSError *__autoreleasing *)outError;
+- (NSData *)inflateData:(NSData *)data error:(NSError * __autoreleasing  _Nullable *_Nullable)outError;
 - (void)cancel;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -10,6 +10,6 @@
 
 @protocol WRDispatchProtocol <NSObject>
 @optional
-@property (nonatomic, strong, readonly) dispatch_queue_t dispatchQueue;
-@property (nonatomic, strong, readonly) NSOperationQueue *operationQueue;
+@property (nonatomic, strong, readonly, nullable) dispatch_queue_t dispatchQueue;
+@property (nonatomic, strong, readonly, nullable) NSOperationQueue *operationQueue;
 @end

@@ -11,8 +11,7 @@
 
 @implementation NSString (WRSHA1)
 
-- (NSData *)wr_SHA1
-{
+- (NSData *)wr_SHA1 {
     size_t length = [self lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
     uint8_t outputLength = CC_SHA1_DIGEST_LENGTH;
     unsigned char output[outputLength];

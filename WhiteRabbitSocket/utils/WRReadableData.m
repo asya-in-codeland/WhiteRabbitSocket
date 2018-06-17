@@ -13,8 +13,7 @@
     NSData *_data;
 }
 
-- (instancetype)initWithData:(NSData *)data
-{
+- (instancetype)initWithData:(NSData *)data {
     self = [super init];
     if (self != nil) {
         _data = data.copy;
@@ -22,32 +21,27 @@
     return self;
 }
 
-- (NSData *)readDataOfLength:(NSUInteger)length
-{
+- (NSData *)readDataOfLength:(NSUInteger)length {
     NSData *result = [self getDataOfLength:length];
     _offset += result.length;
     return result;
 }
 
-- (void)seekToDataOffset:(NSInteger)offset
-{
+- (void)seekToDataOffset:(NSInteger)offset {
     _offset = offset;
 }
 
-- (NSUInteger)length
-{
+- (NSUInteger)length {
     return _data.length - _offset;
 }
 
-- (NSData *)data
-{
+- (NSData *)data {
     return [self getDataOfLength:self.length];
 }
 
 #pragma mark - Private
 
-- (NSData *)getDataOfLength:(NSUInteger)length
-{
+- (NSData *)getDataOfLength:(NSUInteger)length {
     if (_offset >= _data.length) {
         return nil;
     }

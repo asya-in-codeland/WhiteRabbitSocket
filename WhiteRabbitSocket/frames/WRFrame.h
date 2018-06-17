@@ -8,8 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NS_ENUM(NSInteger, WROpCode)
-{
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NS_ENUM(NSInteger, WROpCode) {
     WROpCodeText = 0x1,
     WROpCodeBinary = 0x2,
     WROpCodeClose = 0x8,
@@ -30,10 +31,12 @@ typedef NS_ENUM(NSInteger, WROpCode)
 @property (nonatomic, strong, readonly) NSMutableData *header;
 @property (nonatomic, assign, readonly) NSUInteger headerCapacity;
 
-@property (nonatomic, strong, readonly) NSMutableData *payload;
+@property (nonatomic, strong, readonly, nullable) NSMutableData *payload;
 @property (nonatomic, assign) NSUInteger payloadCapacity;
 
-@property (nonatomic, strong, readonly) NSMutableData *extraLengthBuffer;
+@property (nonatomic, strong, readonly, nullable) NSMutableData *extraLengthBuffer;
 @property (nonatomic, assign) NSUInteger extraLengthCapacity;
 
 @end
+
+NS_ASSUME_NONNULL_END

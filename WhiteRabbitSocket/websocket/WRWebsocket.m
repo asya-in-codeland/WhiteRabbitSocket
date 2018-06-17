@@ -39,13 +39,11 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     WRFrameWriter *_frameWriter;
 }
 
-- (instancetype)initWithURLRequest:(NSURLRequest *)request
-{
+- (instancetype)initWithURLRequest:(NSURLRequest *)request {
     return [self initWithURLRequest:request securePolicy:[WRServerTrustPolicy defaultEvaluationPolicy]];
 }
 
-- (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy
-{
+- (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy {
     self = [super init];
     if (self != nil) {
         _initialRequest = request.copy;
@@ -69,8 +67,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 #pragma mark - Public Methods
 
-- (void)open
-{
+- (void)open {
     if (_state != WRWebsocketStateClosed) return;
 
     self.state = WRWebsocketStateConnecting;
@@ -100,8 +97,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }];
 }
 
-- (void)close
-{
+- (void)close {
     // TODO: WRWebsocketStateConnecting?
     if (_state != WRWebsocketStateConnected) { return; }
 
@@ -114,26 +110,22 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }
 }
 
-- (BOOL)sendData:(NSData *)data error:(NSError **)outError
-{
+- (BOOL)sendData:(NSData *)data error:(NSError **)outError {
     return [self writeData:data opcode:WROpCodeBinary error:outError];
 }
 
-- (BOOL)sendMessage:(NSString *)message error:(NSError **)outError
-{
+- (BOOL)sendMessage:(NSString *)message error:(NSError **)outError {
     NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
     return [self writeData:data opcode:WROpCodeText error:outError];
 }
 
-- (BOOL)sendPing:(NSData *)data error:(NSError **)outError
-{
+- (BOOL)sendPing:(NSData *)data error:(NSError **)outError {
     return [self writeData:data opcode:WROpCodePing error:outError];
 }
 
 #pragma mark - Private Methods
 
-- (void)openingHandshakeWithCompletion:(void(^)(WRHandshakePreferences *, NSError *))completion
-{
+- (void)openingHandshakeWithCompletion:(void(^)(WRHandshakePreferences *, NSError *))completion {
     NSError *outError;
     WRHandshakeHandler *handshakeHandler = [[WRHandshakeHandler alloc] initWithWebsocketProtocols:nil enabledPerMessageDeflate:_enabledPerMessageDeflate];
     NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
@@ -171,8 +163,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }];
 }
 
-- (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError
-{
+- (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError {
     if (_state != WRWebsocketStateConnected) {
         *outError = [NSError wr_errorWithCode:1234 description:@"Unable to write data, connection is closed."];
         return NO;
@@ -207,8 +198,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     return YES;
 }
 
-- (void)readData
-{
+- (void)readData {
     __weak typeof(self) wself = self;
     [_streamTask readDataOfMinLength:2 maxLength:kWRWebsocketChunkLength timeout:0 completionHandler:^(NSData * _Nullable data, BOOL atEOF, NSError * _Nullable error) {
         __strong typeof(wself) sself = wself;
@@ -239,8 +229,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     }];
 }
 
-- (void)closeStream
-{
+- (void)closeStream {
     [_streamTask closeRead];
     [_streamTask closeWrite];
     backgroundDispatch(self.delegate, @selector(websocket:didCloseWithData:), ^{
@@ -248,8 +237,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     });
 }
 
-- (void)setupFrameHandlersWithPreferences:(WRHandshakePreferences *)preferences
-{
+- (void)setupFrameHandlersWithPreferences:(WRHandshakePreferences *)preferences {
     _frameWriter = [[WRFrameWriter alloc] init];
     _frameReader = [[WRFrameReader alloc] init];
     _frameReader.delegate = self;
@@ -278,25 +266,27 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 #pragma mark - NSURLSessionTaskDelegate
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
-didCompleteWithError:(nullable NSError *)error
-{
+didCompleteWithError:(nullable NSError *)error {
     //TODO: add implementation
 }
 
 #pragma mark - WRFrameReaderDelegate
 
-- (void)frameReader:(WRFrameReader *)reader didProcessText:(NSString *)text
-{
+- (void)frameReader:(WRFrameReader *)reader didProcessText:(NSString *)text {
     NSLog(@"Resilt: %@", text);
+    backgroundDispatch(self.delegate, @selector(websocket:didReceiveMessage:), ^{
+        [self.delegate websocket:self didReceiveMessage:text];
+    });
 }
 
-- (void)frameReader:(WRFrameReader *)reader didProcessData:(NSData *)data
-{
+- (void)frameReader:(WRFrameReader *)reader didProcessData:(NSData *)data {
     NSLog(@"Resilt der lenghitten: %lu", (unsigned long)data.length);
+    backgroundDispatch(self.delegate, @selector(websocket:didReceiveData:), ^{
+        [self.delegate websocket:self didReceiveData:data];
+    });
 }
 
-- (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data
-{
+- (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data {
     NSAssert(self.state == WRWebsocketStateConnected, @"Getting close frame in %ld state.", (long)self.state);
 
     if (_state == WRWebsocketStateConnected) {
@@ -304,16 +294,14 @@ didCompleteWithError:(nullable NSError *)error
     }
 }
 
-- (void)frameReader:(WRFrameReader *)reader didProcessPing:(NSData *)data
-{
+- (void)frameReader:(WRFrameReader *)reader didProcessPing:(NSData *)data {
     backgroundDispatch(self.delegate, @selector(websocket:didReceivePing:), ^{
         [self.delegate websocket:self didReceivePing:data];
     });
     [self writeData:nil opcode:WROpCodePong error:nil];
 }
 
-- (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data
-{
+- (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data {
     backgroundDispatch(self.delegate, @selector(websocket:didReceivePong:), ^{
         [self.delegate websocket:self didReceivePong:data];
     });

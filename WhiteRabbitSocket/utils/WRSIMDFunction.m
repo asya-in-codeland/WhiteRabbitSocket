@@ -12,8 +12,7 @@ typedef uint8_t uint8x32_t __attribute__((vector_size(32)));
 
 @implementation WRSIMDFunction
 
-+ (void)maskBytes:(uint8_t *)bytes length:(size_t)length withKey:(uint8_t *)maskKey
-{
++ (void)maskBytes:(uint8_t *)bytes length:(size_t)length withKey:(uint8_t *)maskKey {
     size_t alignmentBytes = _Alignof(uint8x32_t) - ((uintptr_t)bytes % _Alignof(uint8x32_t));
     if (alignmentBytes == _Alignof(uint8x32_t)) {
         alignmentBytes = 0;
@@ -43,8 +42,7 @@ typedef uint8_t uint8x32_t __attribute__((vector_size(32)));
     [self manualMaskingBytes:bytes + manualStartOffset length:manualLength maskKey:(uint8_t *) &maskVector];
 }
 
-+ (uint8x32_t)shiftVector:(uint8x32_t)vector alignmentBytes:(size_t)by
-{
++ (uint8x32_t)shiftVector:(uint8x32_t)vector alignmentBytes:(size_t)by {
     uint8x32_t vectorCopy = vector;
     by = by % _Alignof(uint8x32_t);
 
@@ -57,8 +55,7 @@ typedef uint8_t uint8x32_t __attribute__((vector_size(32)));
     return vector;
 }
 
-+ (void)manualMaskingBytes:(uint8_t *)bytes length:(size_t)length maskKey:(uint8_t *)maskKey
-{
++ (void)manualMaskingBytes:(uint8_t *)bytes length:(size_t)length maskKey:(uint8_t *)maskKey {
     for (size_t i = 0; i < length; i++) {
         bytes[i] = bytes[i] ^ maskKey[i % sizeof(uint32_t)];
     }

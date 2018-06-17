@@ -16,8 +16,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
 
 @implementation WRFrameWriter
 
-- (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error
-{
+- (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error {
     NSData *payloadData = data;
     BOOL shouldCompressData = _deflater != nil && payloadData.length > 0 && (opCode == WROpCodeText || opCode == WROpCodeBinary);
 

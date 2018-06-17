@@ -9,15 +9,19 @@
 #import <Foundation/Foundation.h>
 #import "WRDispatchProtocol.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol WRWebsocketDelegate <WRDispatchProtocol>
 @required
-- (void)websocket:(nonnull WRWebsocket *)websocket didReceiveData:(nonnull NSData *)data;
-- (void)websocket:(nonnull WRWebsocket *)websocket didReceiveMessage:(nonnull NSString *)message;
-- (void)websocket:(nonnull WRWebsocket *)websocket didFailWithError:(nonnull NSError *)error;
+- (void)websocket:(WRWebsocket *)websocket didReceiveData:(NSData *)data;
+- (void)websocket:(WRWebsocket *)websocket didReceiveMessage:(NSString *)message;
+- (void)websocket:(WRWebsocket *)websocket didFailWithError:(NSError *)error;
 
 @optional
-- (void)websocketDidEstablishConnection:(nonnull WRWebsocket *)websocket;
-- (void)websocket:(nonnull WRWebsocket *)websocket didReceivePing:(nullable NSData *)data;
-- (void)websocket:(nonnull WRWebsocket *)websocket didReceivePong:(nullable NSData *)data;
-- (void)websocket:(nonnull WRWebsocket *)websocket didCloseWithData:(nullable NSData *)data;
+- (void)websocketDidEstablishConnection:(WRWebsocket *)websocket;
+- (void)websocket:(WRWebsocket *)websocket didReceivePing:(nullable NSData *)data;
+- (void)websocket:(WRWebsocket *)websocket didReceivePong:(nullable NSData *)data;
+- (void)websocket:(WRWebsocket *)websocket didCloseWithData:(nullable NSData *)data;
 @end
+
+NS_ASSUME_NONNULL_END

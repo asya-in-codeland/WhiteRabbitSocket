@@ -13,8 +13,7 @@
     BOOL _allowSelfSignedCertificates;
 }
 
-- (instancetype)initWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates
-{
+- (instancetype)initWithCertificates:(NSArray *)pinnedCertificates allowSelfSignedCertificates:(BOOL)allowSelfSignedCertificates {
     self = [super init];
     if (self != nil) {
         if (pinnedCertificates.count == 0) {
@@ -29,8 +28,7 @@
     return self;
 }
 
-- (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain
-{
+- (BOOL)evaluateServerTrust:(SecTrustRef)serverTrust domain:(NSString *)domain {
     if (!_allowSelfSignedCertificates && ![super evaluateServerTrust:serverTrust domain:domain]) {
         return NO;
     }

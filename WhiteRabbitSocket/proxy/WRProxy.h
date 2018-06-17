@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface WRProxy : NSObject
 
 @property (nonatomic, copy, readonly) NSString *host;
@@ -19,3 +21,5 @@
 + (instancetype)socksProxyWithHost:(NSString *)host port:(NSInteger)port username:(NSString *)username password:(NSString *)password;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -18,8 +18,7 @@
     z_stream _stream;
 }
 
-- (instancetype)initWithWindowBits:(NSInteger)windowBits noContextTakeover:(BOOL)noContextTakeover
-{
+- (instancetype)initWithWindowBits:(NSInteger)windowBits noContextTakeover:(BOOL)noContextTakeover {
     NSAssert(windowBits >= 1 && windowBits <= 15, @"windowBits must be between 1 and 15");
     
     self = [super init];
@@ -32,15 +31,13 @@
     return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     [self reset];
 }
 
 #pragma mark - Actions
 
-- (NSData *)inflateData:(NSData *)data error:(NSError *__autoreleasing *)outError
-{
+- (NSData *)inflateData:(NSData *)data error:(NSError *__autoreleasing *)outError {
     NSParameterAssert(data != nil);
 
     _stream.avail_in = (uInt)data.length;
@@ -68,8 +65,7 @@
     return inflatedBuffer;
 }
 
-- (void)cancel
-{
+- (void)cancel {
     if (_noContextTakeover) {
         [self reset];
         [self buildInflateBufferWithError:nil];
@@ -78,15 +74,13 @@
 
 #pragma mark - Private
 
-- (void)buildInflateBufferWithError:(NSError *__autoreleasing *)outError
-{
+- (void)buildInflateBufferWithError:(NSError *__autoreleasing *)outError {
     if(inflateInit2(&_stream, _windowBits) != Z_OK) {
         *outError = [NSError wr_errorWithCode:4321 description:@"Failed to initialize inflate stream"];
     }
 }
 
-- (void)reset
-{
+- (void)reset {
     inflateEnd(&_stream);
     bzero(&_stream, sizeof(_stream));
     bzero(_chunkBuffer, sizeof(_chunkBuffer));

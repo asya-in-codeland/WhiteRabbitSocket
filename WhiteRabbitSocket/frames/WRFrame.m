@@ -10,8 +10,7 @@
 
 @implementation WRFrame
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self != nil) {
         _headerCapacity = 2;
@@ -20,14 +19,12 @@
     return self;
 }
 
-- (void)setPayloadCapacity:(NSUInteger)payloadCapacity
-{
+- (void)setPayloadCapacity:(NSUInteger)payloadCapacity {
     _payloadCapacity = payloadCapacity;
     _payload = [NSMutableData dataWithCapacity:payloadCapacity];
 }
 
-- (void)setExtraLengthCapacity:(NSUInteger)extraLengthCapacity
-{
+- (void)setExtraLengthCapacity:(NSUInteger)extraLengthCapacity {
     _extraLengthCapacity = extraLengthCapacity;
     _extraLengthBuffer = [NSMutableData dataWithCapacity:_extraLengthCapacity];
 }

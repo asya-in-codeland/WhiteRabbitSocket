@@ -25,13 +25,11 @@
 
 @implementation WRProxy
 
-+ (instancetype)httpProxyWithHost:(NSString *)host port:(NSInteger)port
-{
++ (instancetype)httpProxyWithHost:(NSString *)host port:(NSInteger)port {
     return [[WRHttpProxy alloc] initWithHost:host port:port];
 }
 
-+ (instancetype)socksProxyWithHost:(NSString *)host port:(NSInteger)port username:(NSString *)username password:(NSString *)password
-{
++ (instancetype)socksProxyWithHost:(NSString *)host port:(NSInteger)port username:(NSString *)username password:(NSString *)password {
     return [[WRSocksProxy alloc] initWithHost:host port:port username:username password:password];
 }
 
@@ -39,8 +37,7 @@
 
 @implementation WRHttpProxy
 
-- (instancetype)initWithHost:(NSString *)host port:(NSInteger)port
-{
+- (instancetype)initWithHost:(NSString *)host port:(NSInteger)port {
     self = [super init];
     if (self != nil) {
         self.host = host;
@@ -55,8 +52,7 @@
 
 @implementation WRSocksProxy
 
-- (instancetype)initWithHost:(NSString *)host port:(NSInteger)port username:(NSString *)username password:(NSString *)password
-{
+- (instancetype)initWithHost:(NSString *)host port:(NSInteger)port username:(NSString *)username password:(NSString *)password {
     self = [super init];
     if (self != nil) {
         self.host = host;

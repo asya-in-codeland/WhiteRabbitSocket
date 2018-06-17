@@ -16,8 +16,7 @@
     void(^_completionHandler)(WRProxy *proxy);
 }
 
-- (instancetype)initWithURL:(NSURL *)url
-{
+- (instancetype)initWithURL:(NSURL *)url {
     self = [super init];
     if (self != nil) {
         _url = url.copy;
@@ -27,16 +26,14 @@
 
 #pragma mark - Public
 
-- (void)fetchProxyWithCompletionHandler:(void(^)(WRProxy *proxy))completionHandler
-{
+- (void)fetchProxyWithCompletionHandler:(void(^)(WRProxy *proxy))completionHandler {
     _completionHandler = completionHandler;
     [self fetchProxy];
 }
 
 #pragma mark - Private
 
-- (void)fetchProxy
-{
+- (void)fetchProxy {
     NSDictionary *proxySettings = CFBridgingRelease(CFNetworkCopySystemProxySettings());
     
     NSURL *httpURL = [NSURL URLWithString:_url.wr_origin];
@@ -68,8 +65,7 @@
     [self onProcessCompletion];
 }
 
-- (void)fetchPACURL:(NSURL *)PACurl settings:(NSDictionary *)settings
-{
+- (void)fetchPACURL:(NSURL *)PACurl settings:(NSDictionary *)settings {
     if ([PACurl isFileURL]) {
         NSError *error = nil;
         NSString *script = [NSString stringWithContentsOfURL:PACurl usedEncoding:NULL error:&error];
@@ -104,8 +100,7 @@
     }] resume];
 }
 
-- (void)performPACScript:(NSString *)script settings:(NSDictionary *)proxySettings
-{
+- (void)performPACScript:(NSString *)script settings:(NSDictionary *)proxySettings {
     if (script == nil) {
         [self onProcessCompletion];
         return;
@@ -128,8 +123,7 @@
     [self onProcessCompletion];
 }
 
-- (void)buildProxyWithType:(NSString *)proxyType settings:(NSDictionary *)settings
-{
+- (void)buildProxyWithType:(NSString *)proxyType settings:(NSDictionary *)settings {
     if ([proxyType isEqualToString:(NSString *)kCFProxyTypeHTTP] ||
         [proxyType isEqualToString:(NSString *)kCFProxyTypeHTTPS]) {
         NSString *host = settings[(NSString *)kCFProxyHostNameKey];
@@ -146,8 +140,7 @@
     }
 }
 
-- (void)onProcessCompletion
-{
+- (void)onProcessCompletion {
     if (_completionHandler != nil) {
         _completionHandler(_proxy);
     }

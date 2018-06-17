@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class WRServerTrustPolicy;
 @protocol WRWebsocketDelegate;
 
@@ -27,8 +29,8 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, assign, readonly) WRWebsocketState state;
 @property (nonatomic, assign) BOOL enabledPerMessageDeflate;
 
-- (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request;
-- (nonnull instancetype)initWithURLRequest:(nonnull NSURLRequest *)request securePolicy:(nonnull WRServerTrustPolicy *)serverTrustPolicy NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithURLRequest:(NSURLRequest *)request;
+- (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy NS_DESIGNATED_INITIALIZER;
 
 - (nullable instancetype)init __attribute__((unavailable("Use designated initializer -initWithURLRequest:securePolicy:securePolicy: instead.")));
 - (nullable instancetype)new __attribute__((unavailable("Use designated initializer -initWithURLRequest: instead.")));
@@ -36,8 +38,10 @@ __attribute__((objc_subclassing_restricted))
 - (void)open;
 - (void)close;
 
-- (BOOL)sendMessage:(nonnull NSString *)message error:(NSError * __autoreleasing  _Nullable *_Nullable)error;
-- (BOOL)sendData:(nonnull NSData *)data error:(NSError * __autoreleasing  _Nullable * _Nullable)error;
+- (BOOL)sendMessage:(NSString *)message error:(NSError * __autoreleasing  _Nullable *_Nullable)error;
+- (BOOL)sendData:(NSData *)data error:(NSError * __autoreleasing  _Nullable * _Nullable)error;
 - (BOOL)sendPing:(nullable NSData *)data error:(NSError * __autoreleasing  _Nullable * _Nullable)error;
 
 @end
+
+NS_ASSUME_NONNULL_END
