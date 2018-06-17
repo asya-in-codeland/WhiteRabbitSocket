@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class WRServerTrustPolicy;
 @protocol WRWebsocketDelegate;
+@protocol WRLogger;
 
 FOUNDATION_EXPORT NSString * _Nonnull const kWRWebsocketErrorDomain;
 
@@ -28,6 +29,7 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, weak, nullable) id<WRWebsocketDelegate> delegate;
 @property (nonatomic, assign, readonly) WRWebsocketState state;
 @property (nonatomic, assign) BOOL enabledPerMessageDeflate;
+@property (nonatomic, strong, nullable) id<WRLogger> logger;
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request;
 - (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy NS_DESIGNATED_INITIALIZER;

@@ -26,6 +26,8 @@
 		22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */; };
 		22BFA8C71F250BE500CCB6D5 /* NSError+WRError.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */; };
 		22EA1A4420D6BCFC00B7F23B /* WRDispatching.m in Sources */ = {isa = PBXBuildFile; fileRef = 22EA1A4320D6BCFC00B7F23B /* WRDispatching.m */; };
+		22EA1A4820D6C76600B7F23B /* WRLoggerWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 22EA1A4720D6C76600B7F23B /* WRLoggerWrapper.m */; };
+		22EA1A4B20D6D0F100B7F23B /* WRLoggerArgumentKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 22EA1A4A20D6D0F100B7F23B /* WRLoggerArgumentKey.m */; };
 		261C5F661F9E574400702814 /* WRSIMDFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 261C5F651F9E574400702814 /* WRSIMDFunction.m */; };
 		264E29512028BB7200181D79 /* WRHandshakePreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 264E29502028BB7200181D79 /* WRHandshakePreferences.m */; };
 		265896FE1FB95EA30029FA23 /* WRReadableData.m in Sources */ = {isa = PBXBuildFile; fileRef = 265896FD1FB95EA30029FA23 /* WRReadableData.m */; };
@@ -76,6 +78,11 @@
 		22EA1A3B20D6B5B600B7F23B /* WRDispatchProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRDispatchProtocol.h; sourceTree = "<group>"; };
 		22EA1A4220D6BCFC00B7F23B /* WRDispatching.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRDispatching.h; sourceTree = "<group>"; };
 		22EA1A4320D6BCFC00B7F23B /* WRDispatching.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRDispatching.m; sourceTree = "<group>"; };
+		22EA1A4520D6C62E00B7F23B /* WRLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRLogger.h; sourceTree = "<group>"; };
+		22EA1A4620D6C76600B7F23B /* WRLoggerWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRLoggerWrapper.h; sourceTree = "<group>"; };
+		22EA1A4720D6C76600B7F23B /* WRLoggerWrapper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRLoggerWrapper.m; sourceTree = "<group>"; };
+		22EA1A4920D6D0F100B7F23B /* WRLoggerArgumentKey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRLoggerArgumentKey.h; sourceTree = "<group>"; };
+		22EA1A4A20D6D0F100B7F23B /* WRLoggerArgumentKey.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRLoggerArgumentKey.m; sourceTree = "<group>"; };
 		261C5F641F9E574400702814 /* WRSIMDFunction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRSIMDFunction.h; sourceTree = "<group>"; };
 		261C5F651F9E574400702814 /* WRSIMDFunction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRSIMDFunction.m; sourceTree = "<group>"; };
 		264E294F2028BB7200181D79 /* WRHandshakePreferences.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRHandshakePreferences.h; sourceTree = "<group>"; };
@@ -205,7 +212,6 @@
 				22BFA8B01F14035200CCB6D5 /* WRWebsocket.h */,
 				22BFA8B11F14035200CCB6D5 /* WRWebsocket.m */,
 				22BFA8BE1F1B5A6E00CCB6D5 /* WRWebsocketDelegate.h */,
-				22EA1A3B20D6B5B600B7F23B /* WRDispatchProtocol.h */,
 			);
 			path = websocket;
 			sourceTree = "<group>";
@@ -232,6 +238,12 @@
 				265896FD1FB95EA30029FA23 /* WRReadableData.m */,
 				22EA1A4220D6BCFC00B7F23B /* WRDispatching.h */,
 				22EA1A4320D6BCFC00B7F23B /* WRDispatching.m */,
+				22EA1A3B20D6B5B600B7F23B /* WRDispatchProtocol.h */,
+				22EA1A4520D6C62E00B7F23B /* WRLogger.h */,
+				22EA1A4620D6C76600B7F23B /* WRLoggerWrapper.h */,
+				22EA1A4720D6C76600B7F23B /* WRLoggerWrapper.m */,
+				22EA1A4920D6D0F100B7F23B /* WRLoggerArgumentKey.h */,
+				22EA1A4A20D6D0F100B7F23B /* WRLoggerArgumentKey.m */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -327,6 +339,7 @@
 				265896FE1FB95EA30029FA23 /* WRReadableData.m in Sources */,
 				22BFA8B21F14035200CCB6D5 /* WRWebsocket.m in Sources */,
 				22BFA89E1F14022000CCB6D5 /* ViewController.m in Sources */,
+				22EA1A4820D6C76600B7F23B /* WRLoggerWrapper.m in Sources */,
 				229AD5901F9CE62C00CD3595 /* WRServerTrustPolicy.m in Sources */,
 				261C5F661F9E574400702814 /* WRSIMDFunction.m in Sources */,
 				22BFA8C11F1B5BB400CCB6D5 /* WRHandshakeHandler.m in Sources */,
@@ -335,6 +348,7 @@
 				229AD5991F9CF0CC00CD3595 /* WRDataDeflater.m in Sources */,
 				22070A1B1FB874CF00F43FC3 /* WRFrameWriter.m in Sources */,
 				22BFA89B1F14022000CCB6D5 /* AppDelegate.m in Sources */,
+				22EA1A4B20D6D0F100B7F23B /* WRLoggerArgumentKey.m in Sources */,
 				22084FB41FC1D2DC00A12EF1 /* WRProxy.m in Sources */,
 				22EA1A4420D6BCFC00B7F23B /* WRDispatching.m in Sources */,
 				22BFA8981F14022000CCB6D5 /* main.m in Sources */,

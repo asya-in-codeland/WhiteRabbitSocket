@@ -19,6 +19,7 @@
 #import "WRDataDeflater.h"
 #import "WRDataInflater.h"
 #import "WRDispatching.h"
+#import "WRLoggerWrapper.h"
 
 NSString * const kWRWebsocketErrorDomain = @"kWRWebsocketErrorDomain";
 
@@ -61,6 +62,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.wr_websocketPort];
+        
+        WRDebugLog(@"Create WRWebsocket instance.", @{WRLoggerArgumentKey.websocketRequest: request.description});
     }
     return self;
 }
@@ -121,6 +124,11 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (BOOL)sendPing:(NSData *)data error:(NSError **)outError {
     return [self writeData:data opcode:WROpCodePing error:outError];
+}
+
+- (void)setLogger:(id<WRLogger>)logger {
+    _logger = logger;
+    [WRLoggerWrapper setLogger:logger];
 }
 
 #pragma mark - Private Methods
@@ -280,7 +288,7 @@ didCompleteWithError:(nullable NSError *)error {
 }
 
 - (void)frameReader:(WRFrameReader *)reader didProcessData:(NSData *)data {
-    NSLog(@"Resilt der lenghitten: %lu", (unsigned long)data.length);
+    WRDebugLog(@"Read data frame.", @{WRLoggerArgumentKey.readDataLength: [NSString stringWithFormat:@"%lu", (unsigned long)data.length]});
     backgroundDispatch(self.delegate, @selector(websocket:didReceiveData:), ^{
         [self.delegate websocket:self didReceiveData:data];
     });
