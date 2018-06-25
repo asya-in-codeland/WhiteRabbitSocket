@@ -55,7 +55,7 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     NSMutableData *keyBytes = [[NSMutableData alloc] initWithLength:16];
     int result = SecRandomCopyBytes(kSecRandomDefault, keyBytes.length, keyBytes.mutableBytes);
     if (result != 0) {
-        *error = [NSError wr_errorWithCode:result description:@"Generates an array of cryptographically secure random bytes."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description:@"Generates an array of cryptographically secure random bytes."];
         return nil;
     }
     
@@ -101,10 +101,8 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
 
 - (WRHandshakePreferences *)parseHandshakeResponse:(NSData *)data error:(NSError *__autoreleasing *)error
 {
-    //TODO: error may be nil, unexpectedly ><
-
     if (data == nil) {
-        *error = [NSError wr_errorWithCode:1334 description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)12334]];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description:@"Received bad response from server."];
         return nil;
     }
 
@@ -115,19 +113,19 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
 
     NSInteger responseCode = CFHTTPMessageGetResponseStatusCode(response);
     if (responseCode >= 400) {
-        *error = [NSError wr_errorWithCode:responseCode description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description:[NSString stringWithFormat:@"Received bad response code from server: %d.", (int)responseCode]];
         return nil;
     }
 
     NSString *upgradeHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Upgrade")));
     if (![upgradeHeader isEqualToString:@"websocket"]) {
-        *error = [NSError wr_errorWithCode:responseCode description:@"Invalid Upgrade response"];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description:@"Invalid Upgrade response"];
         return nil;
     }
 
     NSString *connectionHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Connection")));
     if (![connectionHeader isEqualToString:@"Upgrade"]) {
-        *error = [NSError wr_errorWithCode:responseCode description:@"Invalid Connection response"];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description:@"Invalid Connection response"];
         return nil;
     }
 
@@ -135,23 +133,21 @@ static NSString *const WRWebSocketAppendToSecKeyString = @"258EAFA5-E914-47DA-95
     NSString *concattedString = [_securityKey stringByAppendingString:WRWebSocketAppendToSecKeyString];
     NSString *expectedAccept =  [[concattedString wr_SHA1] base64EncodedStringWithOptions:0];;
     if(acceptHeader == nil || ![acceptHeader isEqualToString:expectedAccept]) {
-        *error = [NSError wr_errorWithCode:2133 description: @"Invalid Sec-WebSocket-Accept response."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"Invalid Sec-WebSocket-Accept response."];
         return nil;
     }
     
     NSString *negotiatedProtocol = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Protocol")));
-    if (negotiatedProtocol != nil) {
-        if ([_websocketProtocols indexOfObject:negotiatedProtocol] == NSNotFound) {
-            *error = [NSError wr_errorWithCode:2133 description: @"Server specified Sec-WebSocket-Protocol that wasn't requested."];
-            return nil;
-        }
+    if (negotiatedProtocol != nil && [_websocketProtocols indexOfObject:negotiatedProtocol] == NSNotFound) {
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"Server specified Sec-WebSocket-Protocol that wasn't requested."];
+        return nil;
     }
 
     //TODO: header may contain multiple lines of "Sec-WebSocket-Extensions"
     NSString *perMessageDeflateHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("Sec-WebSocket-Extensions")));
 
     if (_enabledPerMessageDeflate && ![perMessageDeflateHeader containsString:@"permessage-deflate"]) {
-        *error = [NSError wr_errorWithCode:2133 description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"Server specified Sec-WebSocket-Extensions that wasn't requested."];
         return nil;
     }
 

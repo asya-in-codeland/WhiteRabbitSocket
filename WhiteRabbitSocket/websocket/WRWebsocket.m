@@ -45,20 +45,27 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 }
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy {
+    return [self initWithURLRequest:request securePolicy:serverTrustPolicy protocols:nil cookies:nil];
+}
+
+- (instancetype)initWithURLRequest:(NSURLRequest *)request securePolicy:(WRServerTrustPolicy *)serverTrustPolicy protocols:(nullable NSArray<NSString *> *)protocols cookies:(NSArray<NSHTTPCookie *> *)cookies {
     self = [super init];
     if (self != nil) {
         _initialRequest = request.copy;
         _securePolicy = serverTrustPolicy;
-
+        
         _state = WRWebsocketStateClosed;
-
+        _url = request.URL;
+        _protocols = [[NSArray alloc] initWithArray:protocols copyItems:YES];
+        _cookies = [[NSArray alloc] initWithArray:cookies copyItems:YES];
+        
         //TODO: setup configuration settings
         NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
         configuration.timeoutIntervalForRequest = request.timeoutInterval;
         configuration.requestCachePolicy = request.cachePolicy;
         configuration.TLSMinimumSupportedProtocol = _securePolicy.minTLSSupportedProtocol;
         configuration.TLSMaximumSupportedProtocol = _securePolicy.maxTLSSupportedProtocol;
-
+        
         //TODO: put delegate & queue to an other class
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.wr_websocketPort];
@@ -144,8 +151,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (void)openingHandshakeWithCompletion:(void(^)(WRHandshakePreferences *, NSError *))completion {
     NSError *outError;
-    WRHandshakeHandler *handshakeHandler = [[WRHandshakeHandler alloc] initWithWebsocketProtocols:nil enabledPerMessageDeflate:_enabledPerMessageDeflate];
-    NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
+    WRHandshakeHandler *handshakeHandler = [[WRHandshakeHandler alloc] initWithWebsocketProtocols:_protocols enabledPerMessageDeflate:_enabledPerMessageDeflate];
+    NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:_cookies protocolVersion:kWRWebsocketProtocolVersion error:&outError];
 
     if (handshakeData == nil) {
         WRErrorLog(@"Unable to build handshake request.");
@@ -183,15 +190,15 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 - (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError {
     if (_state != WRWebsocketStateConnected) {
         WRErrorLog(@"Unable to send data. Connection is not opened.");
-        *outError = [NSError wr_errorWithCode:1234 description:@"Unable to write data, connection is closed."];
+        [NSError wr_assignInoutError:outError withCode:WRStatusCodeInternalError description:@"Unable to write data, connection is closed."];
         return NO;
     }
 
     NSData *frameData = [_frameWriter buildFrameFromData:data opCode:opcode error:outError];
 
     if (frameData == nil) {
-        WRErrorLog(@"Unable to build frame from data: %@", data);
-        *outError = [NSError wr_errorWithCode:1234 description:@"Unable to write data, connection is closed."];
+        WRErrorLog(@"Unable to build frame");
+        [NSError wr_assignInoutError:outError withCode:WRStatusCodeInternalError description:@"Unable to build frame."];
         return NO;
     }
 

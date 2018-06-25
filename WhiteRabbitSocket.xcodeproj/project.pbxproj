@@ -74,6 +74,7 @@
 		22BFA8C01F1B5BB400CCB6D5 /* WRHandshakeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WRHandshakeHandler.m; sourceTree = "<group>"; };
 		22BFA8C51F250BE500CCB6D5 /* NSError+WRError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+WRError.h"; sourceTree = "<group>"; };
 		22BFA8C61F250BE500CCB6D5 /* NSError+WRError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+WRError.m"; sourceTree = "<group>"; };
+		22D52FFF20E16B880048E059 /* WhiteRabbitSocket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WhiteRabbitSocket.h; sourceTree = "<group>"; };
 		22EA1A3B20D6B5B600B7F23B /* WRDispatchProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRDispatchProtocol.h; sourceTree = "<group>"; };
 		22EA1A4220D6BCFC00B7F23B /* WRDispatching.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WRDispatching.h; sourceTree = "<group>"; };
 		22EA1A4320D6BCFC00B7F23B /* WRDispatching.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WRDispatching.m; sourceTree = "<group>"; };
@@ -206,9 +207,11 @@
 		22BFA8AF1F14033B00CCB6D5 /* websocket */ = {
 			isa = PBXGroup;
 			children = (
+				22D52FFF20E16B880048E059 /* WhiteRabbitSocket.h */,
 				22BFA8B01F14035200CCB6D5 /* WRWebsocket.h */,
 				22BFA8B11F14035200CCB6D5 /* WRWebsocket.m */,
 				22BFA8BE1F1B5A6E00CCB6D5 /* WRWebsocketDelegate.h */,
+				22EA1A3B20D6B5B600B7F23B /* WRDispatchProtocol.h */,
 			);
 			path = websocket;
 			sourceTree = "<group>";
@@ -235,7 +238,6 @@
 				265896FD1FB95EA30029FA23 /* WRReadableData.m */,
 				22EA1A4220D6BCFC00B7F23B /* WRDispatching.h */,
 				22EA1A4320D6BCFC00B7F23B /* WRDispatching.m */,
-				22EA1A3B20D6B5B600B7F23B /* WRDispatchProtocol.h */,
 				22EA1A4520D6C62E00B7F23B /* WRLogger.h */,
 				22EA1A4620D6C76600B7F23B /* WRLoggerWrapper.h */,
 				22EA1A4720D6C76600B7F23B /* WRLoggerWrapper.m */,

@@ -11,12 +11,12 @@
 void backgroundDispatch(id<WRDispatchProtocol> object, SEL selector, void(^dispatchableBlock)(void)) {
     if (![object respondsToSelector:selector]) { return; }
     
-    if (object.operationQueue != nil) {
-        [object.operationQueue addOperationWithBlock:dispatchableBlock];
+    if (object.delegateOperationQueue != nil) {
+        [object.delegateOperationQueue addOperationWithBlock:dispatchableBlock];
         return;
     }
-    if (object.dispatchQueue != nil) {
-        dispatch_async(object.dispatchQueue, dispatchableBlock);
+    if (object.delegateDispatchQueue != nil) {
+        dispatch_async(object.delegateDispatchQueue, dispatchableBlock);
         return;
     }
     

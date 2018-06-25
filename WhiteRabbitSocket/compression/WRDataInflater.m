@@ -8,6 +8,7 @@
 
 #import "WRDataInflater.h"
 #import "NSError+WRError.h"
+#import "WRWebsocket.h"
 #import <zlib.h>
 
 @implementation WRDataInflater {
@@ -51,7 +52,7 @@
         
         ret = inflate(&_stream, Z_SYNC_FLUSH);
         if(ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
-            *outError = [NSError wr_errorWithCode:4321 description:@"Failed to inflate bytes"];
+            [NSError wr_assignInoutError:outError withCode:WRStatusCodeInternalError description:@"Failed to inflate bytes"];
             return nil;
         }
         
@@ -76,7 +77,7 @@
 
 - (void)buildInflateBufferWithError:(NSError *__autoreleasing *)outError {
     if(inflateInit2(&_stream, _windowBits) != Z_OK) {
-        *outError = [NSError wr_errorWithCode:4321 description:@"Failed to initialize inflate stream"];
+        [NSError wr_assignInoutError:outError withCode:WRStatusCodeInternalError description:@"Failed to initialize inflate stream"];
     }
 }
 

@@ -12,6 +12,7 @@
 #import "WRFrameMasks.h"
 #import "WRDataDeflater.h"
 #import "WRLoggerWrapper.h"
+#import "WRWebsocket.h"
 
 static const NSInteger WRFrameHeaderOverhead = 32;
 
@@ -34,8 +35,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
 
     NSMutableData *frameData = [[NSMutableData alloc] initWithLength:payloadLength + WRFrameHeaderOverhead];
     if (frameData == nil) {
-        WRErrorLog(@"Message is too big.");
-        *error = [NSError wr_errorWithCode:2133 description: @"Message is too big."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeMessageTooBig description: @"Message is too big."];
         return nil;
     }
     
@@ -77,8 +77,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     size_t randomBytesSize = sizeof(uint32_t);
     int result = SecRandomCopyBytes(kSecRandomDefault, randomBytesSize, maskKey);
     if (result != errSecSuccess) {
-        WRErrorLog(@"Unable to get secure key");
-        *error = [NSError wr_errorWithCode:2133 description: @"Message too big."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeMessageTooBig description: @"Unable to get secure key."];
         return nil;
     }
     

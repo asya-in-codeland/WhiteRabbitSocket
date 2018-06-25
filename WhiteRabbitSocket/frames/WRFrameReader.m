@@ -148,8 +148,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     }
     
     if (_currentFrame.rsv1 && !isPerMessageDeflateEnable) {
-        WRErrorLog(@"Server used RSV bits.");
-        *error = [NSError wr_errorWithCode:2133 description: @"Server used RSV bits."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"Server used RSV bits."];
         return NO;
     }
     
@@ -158,14 +157,12 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     BOOL isControlFrame = (receivedOpcode == WROpCodePing || receivedOpcode == WROpCodePong || receivedOpcode == WROpCodeClose);
     
     if (!isControlFrame && receivedOpcode != 0 && _framesCount > 0) {
-        WRErrorLog(@"All data frames after the initial data frame must have opcode 0.");
-        *error = [NSError wr_errorWithCode:2133 description: @"All data frames after the initial data frame must have opcode 0."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"All data frames after the initial data frame must have opcode 0."];
         return NO;
     }
 
     if (receivedOpcode == 0 && _framesCount == 0) {
-        WRErrorLog(@"Cannot continue a message.");
-        *error = [NSError wr_errorWithCode:2133 description: @"Cannot continue a message."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"Cannot continue a message."];
         return NO;
     }
 
@@ -175,8 +172,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     _currentFrame.masked = !!(WRMaskMask & headerBuffer[1]);
     
     if (_currentFrame.masked) {
-        WRErrorLog(@"Client must receive unmasked data.");
-        *error = [NSError wr_errorWithCode:2133 description: @"Client must receive unmasked data."];
+        [NSError wr_assignInoutError:error withCode:WRStatusCodeProtocolError description: @"Client must receive unmasked data."];
         return NO;
     }
     

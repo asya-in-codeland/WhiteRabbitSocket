@@ -78,7 +78,7 @@
 
 - (BOOL)buildDeflaterWithError:(NSError *__autoreleasing *)outError {
     if(deflateInit2(&_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, _windowBits, _memoryLevel, Z_FIXED) != Z_OK) {
-        *outError = [NSError wr_errorWithCode:4321 description:@"Failed to initialize deflate stream"];
+        [NSError wr_assignInoutError:outError withCode:WRStatusCodeInternalError description:@"Failed to initialize deflate stream"];
         return NO;
     }
     return YES;

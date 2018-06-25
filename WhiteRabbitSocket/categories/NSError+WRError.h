@@ -7,13 +7,15 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "WRWebsocket.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSError (WRError)
 
-+ (instancetype)wr_errorWithCode:(NSInteger)code description:(NSString *)description;
-+ (instancetype)wr_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code description:(NSString *)description;
++ (void)wr_assignInoutError:(NSError * __autoreleasing  _Nullable *_Nullable)inoutError withCode:(WRStatusCode)code description:(NSString *)description;
++ (instancetype)wr_errorWithCode:(WRStatusCode)code description:(NSString *)description;
++ (instancetype)wr_errorWithDomain:(NSErrorDomain)domain code:(WRStatusCode)code description:(NSString *)description;
 
 @end
 
