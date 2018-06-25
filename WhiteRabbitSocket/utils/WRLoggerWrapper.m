@@ -8,8 +8,6 @@
 
 #import "WRLoggerWrapper.h"
 
-static id<WRLogger> sharedLogger = nil;
-
 @interface WRDefaultLogger: NSObject <WRLogger>
 @end
 
@@ -18,10 +16,13 @@ static id<WRLogger> sharedLogger = nil;
     return WRLogLevelDebug;
 }
 
-- (void)receiveMessage:(NSString *)message arguments:(nullable NSDictionary<WRLoggerArgumentKey *, NSString*> *)arguments {
-    NSLog(@"%@[%@]", message, arguments);
+- (void)receiveMessage:(NSString *)message {
+    NSLog(@"%@", message);
 }
 @end
+
+static id<WRLogger> sharedLogger = nil;
+static NSDateFormatter *dateFormatter = nil;
 
 @implementation WRLoggerWrapper
 
@@ -36,10 +37,22 @@ static id<WRLogger> sharedLogger = nil;
     } );
 }
 
-+ (void)logMessage:(NSString *)message level:(WRLogLevel)level arguments:(NSDictionary<WRLoggerArgumentKey *,NSString *> *)arguments {
++ (void)logMessage:(NSString *)message level:(WRLogLevel)level {
     id<WRLogger> currentLogger = self.logger != nil ? self.logger : [[WRDefaultLogger alloc] init];
     if (level < currentLogger.logLevel) { return; }
-    [currentLogger receiveMessage:message arguments:arguments];
+    
+    NSString *date = [[self logDateFormatter] stringFromDate:[NSDate date]];
+    NSString *compoundMessage = [NSString stringWithFormat:@"[WRWebsocket] %@ %@", date, message];
+    [currentLogger receiveMessage:compoundMessage];
+}
+
++ (NSDateFormatter *)logDateFormatter {
+    static dispatch_once_t formatterPredicate;
+    dispatch_once( &formatterPredicate, ^{
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat: @"HH:mm:ss.SSSZ"];
+    } );
+    return dateFormatter;
 }
 
 @end

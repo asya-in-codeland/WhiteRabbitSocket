@@ -11,16 +11,19 @@
 #import "WRSIMDFunction.h"
 #import "WRFrameMasks.h"
 #import "WRDataDeflater.h"
+#import "WRLoggerWrapper.h"
 
 static const NSInteger WRFrameHeaderOverhead = 32;
 
 @implementation WRFrameWriter
 
 - (NSData *)buildFrameFromData:(NSData *)data opCode:(WROpCode)opCode error:(NSError **)error {
+    WRDebugLog(@"Start writing data to frame...");
     NSData *payloadData = data;
     BOOL shouldCompressData = _deflater != nil && payloadData.length > 0 && (opCode == WROpCodeText || opCode == WROpCodeBinary);
 
     if (shouldCompressData) {
+        WRDebugLog(@"Should compress sending data");
         payloadData = [_deflater deflateData:payloadData error:error];
         if (payloadData == nil) {
             return nil;
@@ -31,7 +34,8 @@ static const NSInteger WRFrameHeaderOverhead = 32;
 
     NSMutableData *frameData = [[NSMutableData alloc] initWithLength:payloadLength + WRFrameHeaderOverhead];
     if (frameData == nil) {
-        *error = [NSError wr_errorWithCode:2133 description: @"Message too big."];
+        WRErrorLog(@"Message is too big.");
+        *error = [NSError wr_errorWithCode:2133 description: @"Message is too big."];
         return nil;
     }
     
@@ -73,6 +77,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     size_t randomBytesSize = sizeof(uint32_t);
     int result = SecRandomCopyBytes(kSecRandomDefault, randomBytesSize, maskKey);
     if (result != errSecSuccess) {
+        WRErrorLog(@"Unable to get secure key");
         *error = [NSError wr_errorWithCode:2133 description: @"Message too big."];
         return nil;
     }
@@ -88,6 +93,7 @@ static const NSInteger WRFrameHeaderOverhead = 32;
     assert(frameBufferSize <= frameData.length);
     frameData.length = frameBufferSize;
     
+    WRDebugLog(@"Finish data frame building, data length: %lu", frameData.length);
     return frameData;
 }
 

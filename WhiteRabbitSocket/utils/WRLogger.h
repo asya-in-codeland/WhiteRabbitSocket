@@ -21,7 +21,7 @@ typedef NS_ENUM(NSInteger, WRLogLevel) {
 
 @protocol WRLogger <NSObject>
 @property (nonatomic, assign, readonly) WRLogLevel logLevel;
-- (void)receiveMessage:(NSString *)message arguments:(nullable NSDictionary<WRLoggerArgumentKey *, NSString*> *)arguments;
+- (void)receiveMessage:(NSString *)message;
 @end
 
 NS_ASSUME_NONNULL_END

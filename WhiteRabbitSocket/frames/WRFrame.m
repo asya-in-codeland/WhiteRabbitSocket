@@ -29,4 +29,7 @@
     _extraLengthBuffer = [NSMutableData dataWithCapacity:_extraLengthCapacity];
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<WRFrame %p>, fin: %d, rsv1: %d, rsv2: %d, rsv3: %d, opcode: %ld, masked: %d, payloadLength: %lu, headerCapacity: %lu, payloadCapacity: %lu, extraLengthCapacity: %lu", self, self.fin, self.rsv1, self.rsv2, self.rsv3, (long)self.opcode, self.masked, self.payloadLength, self.headerCapacity, self.payloadCapacity, self.extraLengthCapacity];
+}
 @end

@@ -12,6 +12,7 @@
 #import "WRReadableData.h"
 #import "WRDataInflater.h"
 #import "NSError+WRError.h"
+#import "WRLoggerWrapper.h"
 
 typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     WRFrameReaderStateHeader,
@@ -36,15 +37,14 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 }
 
 - (BOOL)readData:(NSData *)data error:(NSError *__autoreleasing *)error {
-    //TODO: handle async
-    NSLog(@"Start reading data...");
+    WRDebugLog(@"Start reading received frame...");
     return [self read:[[WRReadableData alloc] initWithData:data] error:error];
 }
 
 #pragma mark - Private
 
 - (BOOL)read:(WRReadableData *)data error:(NSError *__autoreleasing *)error {
-    NSLog(@"data length: %lu", (unsigned long)data.length);
+    WRDebugLog(@"Read data length: %lu", (unsigned long)data.length);
 
     if (data.length == 0) {
         return YES;
@@ -53,6 +53,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     switch (_state) {
         case WRFrameReaderStateHeader: {
             if(_currentFrame.header.length + data.length < _currentFrame.headerCapacity) {
+                WRDebugLog(@"Read part of frame header, wait for the next part...");
                 [_currentFrame.header appendData:data.data];
                 return YES;
             }
@@ -64,6 +65,8 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             if (!result) {
                 return NO;
             }
+            
+            WRDebugLog(@"Read frame header: %@", _currentFrame);
             
             if (_currentFrame.payloadLength == 0) {
                 _state = WRFrameReaderStateHeader;
@@ -82,10 +85,12 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
         }
         case WRFrameReaderStateExtended: {
             if(_currentFrame.extraLengthBuffer.length + data.length < _currentFrame.extraLengthCapacity) {
+                WRDebugLog(@"Read part of extended info, wait for the next part...");
                 [_currentFrame.extraLengthBuffer appendData:data.data];
                 return YES;
             }
             
+            WRDebugLog(@"Read all extended info");
             NSInteger appendedDataLength = _currentFrame.extraLengthCapacity - _currentFrame.extraLengthBuffer.length;
             [_currentFrame.extraLengthBuffer appendData:[data readDataOfLength:appendedDataLength]];
             
@@ -98,11 +103,14 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
                 _currentFrame.payloadCapacity = (NSUInteger)CFSwapInt64BigToHost(*(uint64_t *)_currentFrame.extraLengthBuffer.bytes);
             }
             
+            WRDebugLog(@"Header payload capacity: %lu", _currentFrame.payloadCapacity);
+            
             _state = WRFrameReaderStatePayload;
             return [self read:data error:error];
         }
         case WRFrameReaderStatePayload: {
             if(_currentFrame.payload.length + data.length < _currentFrame.payloadCapacity) {
+                WRDebugLog(@"Read part of payload, wait for the next part...");
                 [_currentFrame.payload appendData:data.data];
                 return YES;
             }
@@ -114,7 +122,11 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
             }
             [_currentFrame.payload appendData:payload];
             
+            WRDebugLog(@"Read all payload with length: %lu", _currentFrame.payload.length);
+            
             _framesCount++;
+            WRDebugLog(@"Receive frames: %lu", _framesCount);
+            
             [_message appendData:_currentFrame.payload];
 
             [self completeFrameProcessingIfNeeded];
@@ -131,7 +143,12 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 
     _currentFrame.rsv1 = !!(headerBuffer[0] & WRRsv1Mask);
     BOOL isPerMessageDeflateEnable = _inflater != nil;
+    if (isPerMessageDeflateEnable) {
+        WRDebugLog(@"Should decompress received data.");
+    }
+    
     if (_currentFrame.rsv1 && !isPerMessageDeflateEnable) {
+        WRErrorLog(@"Server used RSV bits.");
         *error = [NSError wr_errorWithCode:2133 description: @"Server used RSV bits."];
         return NO;
     }
@@ -141,11 +158,13 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     BOOL isControlFrame = (receivedOpcode == WROpCodePing || receivedOpcode == WROpCodePong || receivedOpcode == WROpCodeClose);
     
     if (!isControlFrame && receivedOpcode != 0 && _framesCount > 0) {
+        WRErrorLog(@"All data frames after the initial data frame must have opcode 0.");
         *error = [NSError wr_errorWithCode:2133 description: @"All data frames after the initial data frame must have opcode 0."];
         return NO;
     }
 
     if (receivedOpcode == 0 && _framesCount == 0) {
+        WRErrorLog(@"Cannot continue a message.");
         *error = [NSError wr_errorWithCode:2133 description: @"Cannot continue a message."];
         return NO;
     }
@@ -156,6 +175,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
     _currentFrame.masked = !!(WRMaskMask & headerBuffer[1]);
     
     if (_currentFrame.masked) {
+        WRErrorLog(@"Client must receive unmasked data.");
         *error = [NSError wr_errorWithCode:2133 description: @"Client must receive unmasked data."];
         return NO;
     }
@@ -176,6 +196,7 @@ typedef NS_ENUM(NSInteger, WRFrameReaderState) {
 }
 
 - (void)notifyDelegate {
+    WRDebugLog(@"Notify delegate with frame type: %lu", (long)_currentFrame.opcode);
     switch (_currentFrame.opcode) {
         case WROpCodeText:
             [_delegate frameReader:self didProcessText:[[NSString alloc] initWithData:_message encoding:NSUTF8StringEncoding]];

@@ -63,7 +63,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         _session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue mainQueue]];
         _streamTask = [_session streamTaskWithHostName:request.URL.host port:request.URL.wr_websocketPort];
         
-        WRDebugLog(@"Create WRWebsocket instance.", @{WRLoggerArgumentKey.websocketRequest: request.description});
+        WRDebugLog(@"Create WRWebsocket instance");
     }
     return self;
 }
@@ -73,6 +73,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 - (void)open {
     if (_state != WRWebsocketStateClosed) return;
 
+    WRDebugLog(@"Start opening...");
+    
     self.state = WRWebsocketStateConnecting;
 
     //TODO: [_streamTask startSecureConnection];
@@ -86,12 +88,14 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         if (preferences != nil) {
             sself.state = WRWebsocketStateConnected;
             
+            WRDebugLog(@"Websocket did establish connection");
             backgroundDispatch(sself.delegate, @selector(websocketDidEstablishConnection:), ^{
                 [sself.delegate websocketDidEstablishConnection:sself];
             });
             [sself setupFrameHandlersWithPreferences:preferences];
             [sself readData];
         } else {
+            WRErrorLog(@"Websocket did fail with error: %@", error);
             backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
                 [sself.delegate websocket:sself didFailWithError:error];
             });
@@ -104,6 +108,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     // TODO: WRWebsocketStateConnecting?
     if (_state != WRWebsocketStateConnected) { return; }
 
+    WRDebugLog(@"Start closing...");
+    
     self.state = WRWebsocketStateClosed;
 
     NSError *error;
@@ -114,15 +120,18 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 }
 
 - (BOOL)sendData:(NSData *)data error:(NSError **)outError {
+    WRDebugLog(@"Send data with length: %lu", data.length);
     return [self writeData:data opcode:WROpCodeBinary error:outError];
 }
 
 - (BOOL)sendMessage:(NSString *)message error:(NSError **)outError {
+    WRDebugLog(@"Send message: %@", message);
     NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
     return [self writeData:data opcode:WROpCodeText error:outError];
 }
 
 - (BOOL)sendPing:(NSData *)data error:(NSError **)outError {
+    WRDebugLog(@"Send ping");
     return [self writeData:data opcode:WROpCodePing error:outError];
 }
 
@@ -139,18 +148,18 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSData *handshakeData = [handshakeHandler buildHandshakeDataWithRequest:_initialRequest cookies:nil protocolVersion:kWRWebsocketProtocolVersion error:&outError];
 
     if (handshakeData == nil) {
+        WRErrorLog(@"Unable to build handshake request.");
         completion(nil, outError);
         return;
     }
 
-
-    NSLog(@"Handshake request: %@", [[NSString alloc] initWithData:handshakeData encoding:kCFStringEncodingUTF8]);
+    WRDebugLog(@"Send handshake request: %@", [[NSString alloc] initWithData:handshakeData encoding:kCFStringEncodingUTF8]);
 
     [_streamTask writeData:handshakeData timeout:_initialRequest.timeoutInterval completionHandler:^(NSError * _Nullable error) {
         if (error != nil) {
             completion(nil, error);
         } else {
-            NSLog(@"Writing is done!");
+            WRInfoLog(@"Handshake request was sended.");
         }
     }];
 
@@ -164,7 +173,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         }
         else {
             NSError *parseError;
-            NSLog(@"Handshake response: %@", [[NSString alloc] initWithData:data encoding:kCFStringEncodingUTF8]);
+            WRDebugLog(@"Receive handshake response: %@", [[NSString alloc] initWithData:data encoding:kCFStringEncodingUTF8]);
             WRHandshakePreferences *preferences = [handshakeHandler parseHandshakeResponse:data error:&parseError];
             completion(preferences, parseError);
         }
@@ -173,6 +182,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 
 - (BOOL)writeData:(NSData *)data opcode:(WROpCode)opcode error:(NSError **)outError {
     if (_state != WRWebsocketStateConnected) {
+        WRErrorLog(@"Unable to send data. Connection is not opened.");
         *outError = [NSError wr_errorWithCode:1234 description:@"Unable to write data, connection is closed."];
         return NO;
     }
@@ -180,6 +190,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
     NSData *frameData = [_frameWriter buildFrameFromData:data opCode:opcode error:outError];
 
     if (frameData == nil) {
+        WRErrorLog(@"Unable to build frame from data: %@", data);
+        *outError = [NSError wr_errorWithCode:1234 description:@"Unable to write data, connection is closed."];
         return NO;
     }
 
@@ -194,12 +206,13 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         }
 
         if (error != nil) {
+            WRErrorLog(@"Getting error while sending data: %@", error);
             backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
                 [sself.delegate websocket:sself didFailWithError:error];
             });
             [sself closeStream];
         } else {
-            NSLog(@"Writing is done!");
+            WRInfoLog(@"Websocket sent data");
         }
     }];
 
@@ -213,6 +226,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
         if (sself == nil) return;
 
         if (error != nil) {
+            WRErrorLog(@"Getting error while receiving data: %@", error);
             backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
                 [sself.delegate websocket:sself didFailWithError:error];
             });
@@ -226,6 +240,7 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
                 NSError *readerError;
                 BOOL result = [sself->_frameReader readData:data error:&readerError];
                 if (!result) {
+                    WRErrorLog(@"Unable to read receiving frame: %@", readerError);
                     backgroundDispatch(sself.delegate, @selector(websocket:didFailWithError:), ^{
                         [sself.delegate websocket:sself didFailWithError:readerError];
                     });
@@ -238,6 +253,8 @@ static NSInteger const kWRWebsocketChunkLength = 4096;
 }
 
 - (void)closeStream {
+    WRDebugLog(@"Websocket was closed");
+    
     [_streamTask closeRead];
     [_streamTask closeWrite];
     backgroundDispatch(self.delegate, @selector(websocket:didCloseWithData:), ^{
@@ -281,20 +298,21 @@ didCompleteWithError:(nullable NSError *)error {
 #pragma mark - WRFrameReaderDelegate
 
 - (void)frameReader:(WRFrameReader *)reader didProcessText:(NSString *)text {
-    NSLog(@"Resilt: %@", text);
+    WRDebugLog(@"Websocket did receive text message: %@", text);
     backgroundDispatch(self.delegate, @selector(websocket:didReceiveMessage:), ^{
         [self.delegate websocket:self didReceiveMessage:text];
     });
 }
 
 - (void)frameReader:(WRFrameReader *)reader didProcessData:(NSData *)data {
-    WRDebugLog(@"Read data frame.", @{WRLoggerArgumentKey.readDataLength: [NSString stringWithFormat:@"%lu", (unsigned long)data.length]});
+    WRDebugLog(@"Websocket did receive byte message, length %lu.", data.length);
     backgroundDispatch(self.delegate, @selector(websocket:didReceiveData:), ^{
         [self.delegate websocket:self didReceiveData:data];
     });
 }
 
 - (void)frameReader:(WRFrameReader *)reader didProcessClose:(NSData *)data {
+    WRDebugLog(@"Websocket did receive close frame");
     NSAssert(self.state == WRWebsocketStateConnected, @"Getting close frame in %ld state.", (long)self.state);
 
     if (_state == WRWebsocketStateConnected) {
@@ -303,6 +321,7 @@ didCompleteWithError:(nullable NSError *)error {
 }
 
 - (void)frameReader:(WRFrameReader *)reader didProcessPing:(NSData *)data {
+    WRDebugLog(@"Websocket did receive ping frame");
     backgroundDispatch(self.delegate, @selector(websocket:didReceivePing:), ^{
         [self.delegate websocket:self didReceivePing:data];
     });
@@ -310,6 +329,7 @@ didCompleteWithError:(nullable NSError *)error {
 }
 
 - (void)frameReader:(WRFrameReader *)reader didProcessPong:(NSData *)data {
+    WRDebugLog(@"Websocket did receive pong frame");
     backgroundDispatch(self.delegate, @selector(websocket:didReceivePong:), ^{
         [self.delegate websocket:self didReceivePong:data];
     });

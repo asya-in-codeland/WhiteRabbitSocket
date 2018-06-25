@@ -8,14 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "WRLogger.h"
-#import "WRLoggerArgumentKey.h"
 
 @interface WRLoggerWrapper : NSObject
 @property (class, nonatomic, strong) id<WRLogger> logger;
-+ (void)logMessage:(NSString *)message level:(WRLogLevel)level arguments:(NSDictionary<WRLoggerArgumentKey *, NSString*> *)arguments;
++ (void)logMessage:(NSString *)message level:(WRLogLevel)level;
 @end
 
-#define WRDebugLog(message, ...) [WRLoggerWrapper logMessage:message level:WRLogLevelDebug arguments: __VA_ARGS__]
-#define WRInfoLog(message, ...) [WRLoggerWrapper logMessage:message level:WRLogLevelInfo arguments:__VA_ARGS__]
-#define WRWarningLog(message, ...) [WRLoggerWrapper logMessage:message level:WRLogLevelWarning arguments: __VA_ARGS__]
-#define WRErrorLog(message, ...) [WRLoggerWrapper logMessage:message level:WRLogLevelError arguments: __VA_ARGS__]
+#define WRDebugLog(message, ...) [WRLoggerWrapper logMessage:[NSString stringWithFormat:(message), ##__VA_ARGS__] level:WRLogLevelDebug]
+#define WRInfoLog(message, ...) [WRLoggerWrapper logMessage:[NSString stringWithFormat:(message), ##__VA_ARGS__] level:WRLogLevelInfo]
+#define WRWarningLog(message, ...) [WRLoggerWrapper logMessage:[NSString stringWithFormat:(message), ##__VA_ARGS__] level:WRLogLevelWarning]
+#define WRErrorLog(message, ...) [WRLoggerWrapper logMessage:[NSString stringWithFormat:(message), ##__VA_ARGS__] level:WRLogLevelError]
